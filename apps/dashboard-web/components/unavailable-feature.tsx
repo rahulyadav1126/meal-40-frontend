@@ -1,0 +1,2 @@
+import { EmptyState, PageHeader } from '@plate40/ui';
+export function UnavailableFeature({ title, description }: { title: string; description: string }) { return <main className="dashboard-page"><PageHeader title={title} description={description} /><EmptyState title="Backend endpoint not available yet" description="This screen is ready for API integration and intentionally does not display fabricated production data." /></main>; }

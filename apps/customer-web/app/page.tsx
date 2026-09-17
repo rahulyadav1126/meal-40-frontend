@@ -1,0 +1,19 @@
+'use client';
+
+import Link from 'next/link';
+import { ArrowRight, BadgeIndianRupee, Bike, ShieldCheck, Sparkles } from 'lucide-react';
+import { ROUTES } from '@plate40/config';
+import { useRestaurantsQuery } from '@plate40/state';
+import { Button, Card, ErrorState, Skeleton } from '@plate40/ui';
+import { RestaurantCard } from '../components/restaurant-card';
+
+const BENEFITS = [
+  { title: 'Pocket-friendly ₹40 meals', detail: 'Everyday food without the everyday budget stress.', icon: BadgeIndianRupee },
+  { title: 'Fast 25-minute delivery', detail: 'Hyperlocal kitchens keep every route short.', icon: Bike },
+  { title: 'Verified neighborhood kitchens', detail: 'Quality and hygiene checks before kitchens go live.', icon: ShieldCheck },
+] as const;
+
+export default function HomePage() {
+  const { data, isLoading, isError } = useRestaurantsQuery({ page: 1, limit: 4 });
+  return <main><section className="hero"><div className="p40-container hero__grid"><div className="hero__copy"><span className="hero__eyebrow"><Sparkles size={14} /> Bengaluru&apos;s daily budget food revolution</span><h1>Tasty meals starting at <em>₹40</em></h1><p>Wholesome homestyle North and South Indian meals, thalis, and quick snacks cooked fresh daily and delivered hot.</p><div className="hero__actions"><Link href={ROUTES.customer.restaurants}><Button>Order now <ArrowRight size={17} /></Button></Link><Link href={ROUTES.customer.offers}><Button variant="secondary">Explore ₹40 thalis</Button></Link></div><div className="hero__proof"><span>50k+ daily orders</span><span>4.6/5 food rating</span><span>25 min avg dispatch</span></div></div><div className="hero__mosaic" aria-label="Plate40 meal selection"><div className="meal-tile meal-tile--large"><strong>Rajma rice bowl</strong><span>Pure comfort, from ₹40</span></div><div className="meal-tile"><strong>Executive veg thali</strong><span>Balanced and filling</span></div><div className="meal-tile"><strong>Paneer deluxe</strong><span>A weekend favourite</span></div></div></div></section><section className="benefits p40-container">{BENEFITS.map(({ title, detail, icon: Icon }) => <Card className="benefit-card" key={title}><span><Icon size={21} /></span><div><strong>{title}</strong><p>{detail}</p></div></Card>)}</section><section className="home-section p40-container"><div className="section-heading"><div><span className="section-kicker">Hyperlocal kitchens</span><h2>Popular near you</h2><p>Top-rated neighborhood kitchens serving fresh, budget-friendly meals.</p></div><Link href={ROUTES.customer.restaurants}>View all restaurants <ArrowRight size={16} /></Link></div>{isLoading ? <div className="restaurant-grid">{Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} />)}</div> : isError ? <ErrorState /> : <div className="restaurant-grid">{data?.items.map((restaurant) => <RestaurantCard key={restaurant.id} restaurant={restaurant} />)}</div>}</section><section className="promise-section"><div className="p40-container"><span className="section-kicker">The Plate40 promise</span><h2>Why choose Plate40?</h2><div className="promise-grid"><Card><h3>Zero surge and transparent pricing</h3><p>Meals stay affordable across college, office, and residential neighborhoods.</p></Card><Card className="promise-grid__featured"><h3>Strict kitchen verification</h3><p>Every kitchen is reviewed for safety, hygiene, and responsible preparation.</p></Card><Card><h3>Precision local delivery</h3><p>Shorter routes help meals arrive warm, with live order progress.</p></Card></div></div></section><section className="tracking-banner p40-container"><div><span className="section-kicker">Live order experience</span><h2>Order in three taps and track every stage</h2><p>See the kitchen accept, prepare, dispatch, and complete your order in real time.</p></div><Link href={ROUTES.customer.orders}><Button>Track an order <ArrowRight size={17} /></Button></Link></section></main>;
+}
