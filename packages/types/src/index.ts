@@ -1,7 +1,30 @@
 export enum UserRole {
   CUSTOMER = 'CUSTOMER',
   MERCHANT = 'MERCHANT',
+  DELIVERY_PARTNER = 'DELIVERY_PARTNER',
   ADMIN = 'ADMIN',
+}
+export enum DeliveryPartnerApprovalStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  SUSPENDED = 'SUSPENDED',
+}
+export enum VehicleType {
+  BICYCLE = 'BICYCLE',
+  MOTORCYCLE = 'MOTORCYCLE',
+  SCOOTER = 'SCOOTER',
+  CAR = 'CAR',
+}
+export enum DeliveryStatus {
+  AVAILABLE = 'AVAILABLE',
+  ASSIGNED = 'ASSIGNED',
+  ARRIVED_AT_MERCHANT = 'ARRIVED_AT_MERCHANT',
+  PICKED_UP = 'PICKED_UP',
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
+  ARRIVED_AT_CUSTOMER = 'ARRIVED_AT_CUSTOMER',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum UserStatus {
@@ -37,6 +60,8 @@ export enum OrderStatus {
   REJECTED = 'REJECTED',
   PREPARING = 'PREPARING',
   READY = 'READY',
+  ASSIGNED = 'ASSIGNED',
+  PICKED_UP = 'PICKED_UP',
   OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
@@ -114,6 +139,7 @@ export interface Restaurant {
   description?: string | null;
   logoUrl?: string | null;
   coverImageUrl?: string | null;
+  addressLine1?: string;
   city: string;
   state: string;
   averageRating: string | number;
@@ -141,6 +167,16 @@ export interface MenuItem {
   isFeatured: boolean;
 }
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 export interface Cart {
   id: number;
   restaurantId: number;
@@ -159,8 +195,11 @@ export interface CartItem {
 export interface Address {
   id: number;
   label: AddressLabel;
+  recipientName: string;
+  phone: string;
   addressLine1: string;
   addressLine2?: string | null;
+  landmark?: string | null;
   city: string;
   state: string;
   postalCode: string;
@@ -184,6 +223,54 @@ export interface Order {
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
   createdAt: string;
+  delivery?: Pick<Delivery, 'id' | 'status' | 'estimatedMinutes' | 'deliveryPartner'> | null;
+  deliveryOtp?: string;
+}
+
+export interface DeliveryPartner {
+  id: number;
+  userId: number;
+  user: User;
+  name?: string;
+  phone?: string | null;
+  profilePhotoUrl: string | null;
+  address: string;
+  vehicleType: VehicleType;
+  vehicleNumber: string;
+  approvalStatus: DeliveryPartnerApprovalStatus;
+  isOnline: boolean;
+  documents?: Array<{
+    id: number;
+    type: string;
+    documentNumber: string;
+    documentUrl: string | null;
+    status: string;
+  }>;
+}
+
+export interface Delivery {
+  id: number;
+  orderId: number;
+  deliveryPartnerId: number | null;
+  status: DeliveryStatus;
+  distanceKm: string;
+  deliveryFee: string;
+  estimatedMinutes: number;
+  order: Order & {
+    address?: Address;
+    customer?: User;
+    items?: Array<{ id: number; itemName: string; quantity: number }>;
+  };
+  deliveryPartner?: DeliveryPartner | null;
+}
+
+export interface DeliveryEarnings {
+  today: string;
+  week: string;
+  month: string;
+  total: string;
+  completedDeliveries: string;
+  history: Array<{ id: number; totalAmount: string; createdAt: string; delivery: Delivery }>;
 }
 
 export interface AdminDashboard {

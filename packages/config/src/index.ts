@@ -9,12 +9,14 @@ export const API_PATHS = {
   auth: {
     login: '/auth/login',
     register: '/auth/register',
+    deliveryRegister: '/auth/delivery/register',
     refresh: '/auth/refresh',
     logout: '/auth/logout',
     logoutAll: '/auth/logout-all',
     sessions: '/auth/sessions',
   },
   restaurants: '/restaurants',
+  categories: '/categories',
   menu: (restaurantId: number | string) => `/restaurants/${restaurantId}/menu`,
   cart: '/cart',
   cartItems: '/cart/items',
@@ -23,11 +25,27 @@ export const API_PATHS = {
   order: (orderId: number | string) => `/orders/${orderId}`,
   addresses: '/addresses',
   notifications: '/notifications',
+  profile: '/users/me',
+  locations: {
+    autocomplete: '/locations/autocomplete',
+    details: (placeId: string) => `/locations/details/${encodeURIComponent(placeId)}`,
+  },
   merchant: {
     restaurants: '/merchant/restaurants',
     orders: '/merchant/orders',
     menu: '/merchant/menu',
+    menuImage: '/merchant/menu/image',
+    menuItem: (itemId: number) => `/merchant/menu/${itemId}`,
     orderAction: (orderId: number, action: string) => `/merchant/orders/${orderId}/${action}`,
+  },
+  delivery: {
+    profile: '/delivery/profile',
+    availability: '/delivery/availability',
+    available: '/delivery/available',
+    active: '/delivery/active',
+    history: '/delivery/history',
+    earnings: '/delivery/earnings',
+    action: (deliveryId: number, action: string) => `/delivery/${deliveryId}/${action}`,
   },
   admin: {
     dashboard: '/admin/dashboard',
@@ -37,6 +55,12 @@ export const API_PATHS = {
     restaurantAction: (restaurantId: number, action: string) =>
       `/admin/restaurants/${restaurantId}/${action}`,
     userAction: (userId: number, action: string) => `/admin/users/${userId}/${action}`,
+    deliveryPartners: '/admin/delivery/partners',
+    deliveries: '/admin/delivery/deliveries',
+    deliveryPartnerAction: (id: number, action: string) =>
+      `/admin/delivery/partners/${id}/${action}`,
+    deliveryDocumentAction: (id: number, action: string) =>
+      `/admin/delivery/documents/${id}/${action}`,
   },
 } as const;
 
@@ -50,6 +74,7 @@ export const ACTIONS = {
   preparing: 'preparing',
   ready: 'ready',
   outForDelivery: 'out-for-delivery',
+  deliver: 'deliver',
 } as const;
 
 export const ROUTES = {
@@ -74,6 +99,7 @@ export const ROUTES = {
     payments: '/admin/payments',
     coupons: '/admin/coupons',
     reports: '/admin/reports',
+    delivery: '/admin/delivery',
   },
   merchant: {
     dashboard: '/merchant/dashboard',
@@ -83,12 +109,23 @@ export const ROUTES = {
     reviews: '/merchant/reviews',
     settings: '/merchant/settings',
   },
+  delivery: {
+    dashboard: '/delivery/dashboard',
+    available: '/delivery/available',
+    active: '/delivery/active',
+    history: '/delivery/history',
+    earnings: '/delivery/earnings',
+    profile: '/delivery/profile',
+    settings: '/delivery/settings',
+    register: '/delivery-register',
+  },
 } as const;
 
 export const STORAGE_KEYS = {
   accessToken: 'plate40.access-token',
   refreshToken: 'plate40.refresh-token',
   user: 'plate40.user',
+  deliveryLocation: 'plate40.delivery-location',
 } as const;
 
 export const APP_NAMES = {

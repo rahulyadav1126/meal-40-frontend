@@ -4,17 +4,28 @@ import { UserRole, type AuthSession, type User } from '@plate40/types';
 export const ROLE_HOME: Record<UserRole, string> = {
   [UserRole.CUSTOMER]: '/',
   [UserRole.MERCHANT]: '/merchant/dashboard',
+  [UserRole.DELIVERY_PARTNER]: '/delivery/dashboard',
   [UserRole.ADMIN]: '/admin/dashboard',
 };
+export const SESSION_CHANGED_EVENT = 'plate40:session-changed';
 
 export function saveSession(session: AuthSession): void {
   window.localStorage.setItem(STORAGE_KEYS.accessToken, session.accessToken);
   window.localStorage.setItem(STORAGE_KEYS.refreshToken, session.refreshToken);
   window.localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(session.user));
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
 }
 
 export function clearSession(): void {
-  Object.values(STORAGE_KEYS).forEach((key) => window.localStorage.removeItem(key));
+  window.localStorage.removeItem(STORAGE_KEYS.accessToken);
+  window.localStorage.removeItem(STORAGE_KEYS.refreshToken);
+  window.localStorage.removeItem(STORAGE_KEYS.user);
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
+}
+
+export function updateStoredUser(user: User): void {
+  window.localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+  window.dispatchEvent(new Event(SESSION_CHANGED_EVENT));
 }
 
 export function getStoredUser(): User | null {

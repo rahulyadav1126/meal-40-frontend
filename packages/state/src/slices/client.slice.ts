@@ -9,7 +9,7 @@ interface ClientState {
 }
 
 const initialState: ClientState = {
-  selectedLocation: 'HSR Layout, Sector 4, Bengaluru',
+  selectedLocation: 'Choose location',
   mobileMenuOpen: false,
   cartPreviewOpen: false,
   checkout: { addressId: null, paymentMethod: PaymentMethod.COD, customerNote: '' },
