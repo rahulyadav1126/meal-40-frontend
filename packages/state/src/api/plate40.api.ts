@@ -219,6 +219,15 @@ export const plate40Api = baseApi.injectEndpoints({
       transformResponse: normalizeAddress,
       invalidatesTags: ['Addresses'],
     }),
+    updateAddress: builder.mutation<Address, { id: number; data: Partial<Omit<Address, 'id'>> }>({
+      query: ({ id, data }) => ({ url: `${API_PATHS.addresses}/${id}`, method: 'PATCH', data }),
+      transformResponse: normalizeAddress,
+      invalidatesTags: ['Addresses'],
+    }),
+    deleteAddress: builder.mutation<void, number>({
+      query: (id) => ({ url: `${API_PATHS.addresses}/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Addresses'],
+    }),
     merchantOrders: builder.query<Order[], void>({
       query: () => ({ url: API_PATHS.merchant.orders }),
       providesTags: ['MerchantOrders'],
@@ -393,6 +402,8 @@ export const {
   useCreateOrderMutation,
   useAddressesQuery,
   useCreateAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
   useMerchantOrdersQuery,
   useMerchantRestaurantsQuery,
   useCreateMerchantRestaurantMutation,

@@ -89,6 +89,7 @@ export const ROUTES = {
     profile: '/profile',
     addresses: '/profile/addresses',
     offers: '/offers',
+    help: '/help',
     testPayment: '/payment/test',
   },
   admin: {

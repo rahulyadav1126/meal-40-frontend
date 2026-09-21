@@ -14,18 +14,23 @@ import {
   UserRound,
   LogOut,
   X,
+  CircleHelp,
+  Percent,
+  UtensilsCrossed,
+  Home,
 } from 'lucide-react';
 import { ROUTES, STORAGE_KEYS } from '@plate40/config';
 import { clearSession, SESSION_CHANGED_EVENT } from '@plate40/auth';
-import { baseApi, setSelectedLocation, useAppDispatch, useAppSelector } from '@plate40/state';
-import { UserRole, type User } from '@plate40/types';
+import { baseApi, setSelectedLocation, useAppDispatch, useAppSelector, useCartsQuery, useCartItemsQuery, useAddressesQuery } from '@plate40/state';
+import { UserRole, AddressLabel, type User } from '@plate40/types';
 import { AddressAutocomplete, Button, type AddressSelection } from '@plate40/ui';
 
 interface StoredLocation {
   label: string;
+  tag?: AddressLabel;
   latitude: number | null;
   longitude: number | null;
-  source: 'manual' | 'device';
+  source: 'manual' | 'device' | 'saved';
 }
 
 function subscribeToSession(callback: () => void) {
@@ -91,10 +96,19 @@ export function CustomerHeader() {
   const location = useAppSelector((state) => state.client.selectedLocation);
   const selectorRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const [manualLocation, setManualLocation] = useState('');
   const [selectedAddress, setSelectedAddress] = useState<AddressSelection | null>(null);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: addresses } = useAddressesQuery(undefined, { skip: !user });
+
+  const { data: carts } = useCartsQuery();
+  const cartId = carts?.[0]?.id;
+  const { data: cartItems } = useCartItemsQuery(cartId as number, { skip: !cartId });
+  const cartItemCount = cartItems?.reduce((total: number, item: any) => total + item.quantity, 0) || 0;
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEYS.deliveryLocation);
@@ -125,7 +139,7 @@ export function CustomerHeader() {
 
   const saveLocation = (value: StoredLocation) => {
     window.localStorage.setItem(STORAGE_KEYS.deliveryLocation, JSON.stringify(value));
-    dispatch(setSelectedLocation(value.label));
+    dispatch(setSelectedLocation(JSON.stringify({ label: value.label, tag: value.tag })));
     setManualLocation('');
     setSelectedAddress(null);
     setError(null);
@@ -194,29 +208,50 @@ export function CustomerHeader() {
   return (
     <header className="customer-header">
       <div className="customer-header__inner p40-container">
-        <Link className="brand" href={ROUTES.customer.home}>
-          <span className="brand__mark">P</span>
-          <span>Plate40</span>
-        </Link>
+        <div className="header-left">
+          <Link className="brand-logo" href={ROUTES.customer.home}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="Plate40" className="brand-logo-img" />
+          </Link>
 
-        <div className="location-selector" ref={selectorRef}>
-          <button
-            className="location-pill"
-            type="button"
-            title="Change delivery location"
-            aria-expanded={open}
-            aria-controls="delivery-location-panel"
-            onClick={() => {
-              setOpen((value) => !value);
-              setError(null);
-            }}
-          >
-            <MapPin size={17} />
-            <span>
-              Delivery to: <strong>{location}</strong>
-            </span>
-            <ChevronDown className={open ? 'is-open' : ''} size={15} />
-          </button>
+          <div className="location-selector-wrapper" ref={selectorRef}>
+            {(() => {
+              if (!location || location === 'Choose location') return null;
+              try {
+                const parsed = JSON.parse(location) as { tag?: string };
+                if (parsed.tag) {
+                  return <div className="location-tag">{parsed.tag}</div>;
+                }
+              } catch {
+                // Not JSON, ignore
+              }
+              return null;
+            })()}
+            <div className="location-selector">
+              <button
+                className="location-button"
+                type="button"
+                title="Change delivery location"
+                aria-expanded={open}
+                aria-controls="delivery-location-panel"
+                onClick={() => {
+                  setOpen((value) => !value);
+                  setError(null);
+                }}
+              >
+                <div className="location-text">
+                  {(() => {
+                    if (!location || location === 'Choose location') return 'Select Location';
+                    try {
+                      const parsed = JSON.parse(location) as { label: string };
+                      return <span>{parsed.label}</span>;
+                    } catch {
+                      return location;
+                    }
+                  })()}
+                </div>
+                <ChevronDown className={open ? 'is-open' : ''} size={15} color="var(--p40-brand)" />
+              </button>
           {open ? (
             <section
               className="location-panel"
@@ -251,12 +286,49 @@ export function CustomerHeader() {
                 </div>
                 {!locating ? <ChevronDown size={17} /> : <span className="location-loader" />}
               </button>
+              {error ? <p className="location-error">{error}</p> : null}
+
+              {/* The new saved addresses section */}
+              {user && addresses && addresses.length > 0 && (
+                <div className="saved-addresses-section">
+                  <div className="saved-addresses-header">SAVED ADDRESSES</div>
+                  {addresses.map((address) => (
+                    <div className="saved-address-item" key={address.id}>
+                      <button
+                        className="saved-address-btn"
+                        type="button"
+                        onClick={() => {
+                          saveLocation({
+                            label: `${address.addressLine1}, ${address.city}, ${address.state}, ${address.postalCode}`,
+                            tag: address.label,
+                            latitude: address.latitude ? parseFloat(address.latitude) : null,
+                            longitude: address.longitude ? parseFloat(address.longitude) : null,
+                            source: 'saved',
+                          });
+                        }}
+                      >
+                        <div className="saved-address-icon">
+                          {address.label === AddressLabel.HOME ? <UserRound size={20} /> : address.label === AddressLabel.WORK ? <ShoppingBag size={20} /> : <MapPin size={20} />}
+                        </div>
+                        <div className="saved-address-content">
+                          <strong>{address.label.charAt(0).toUpperCase() + address.label.slice(1).toLowerCase()}</strong>
+                          <p>{address.addressLine1}, {address.city}, {address.state}, India</p>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                  <Link href={ROUTES.customer.addresses} className="saved-address-view-more" onClick={() => setOpen(false)}>
+                    VIEW MORE
+                  </Link>
+                </div>
+              )}
+
               <div className="location-divider">
                 <span>or enter manually</span>
               </div>
               <form onSubmit={submitManualLocation}>
                 <label className="p40-field">
-                  <span className="p40-label">House number, street, area or landmark</span>
+                  <span className="p40-label">Search for area, street name..</span>
                   <AddressAutocomplete
                     autoFocus
                     required
@@ -264,25 +336,13 @@ export function CustomerHeader() {
                     value={manualLocation}
                     onValueChange={(value) => {
                       setManualLocation(value);
-                      setSelectedAddress(null);
-                      setError(null);
+                      if (!value) setSelectedAddress(null);
                     }}
-                    onAddressSelect={(address) => {
-                      setSelectedAddress(address);
-                      setManualLocation(address.formattedAddress);
-                      setError(null);
-                    }}
-                    onError={setError}
+                    onAddressSelect={setSelectedAddress}
                   />
                 </label>
-                {error ? (
-                  <p className="location-error" role="alert">
-                    {error}
-                  </p>
-                ) : null}
-                <Button type="submit" disabled={!manualLocation.trim()}>
-                  <Check size={17} />
-                  Use this location
+                <Button type="submit" disabled={!selectedAddress && !manualLocation.trim()} variant="primary" style={{ marginTop: '0.75rem', width: '100%' }}>
+                  Confirm Location
                 </Button>
               </form>
               <p className="location-privacy">
@@ -291,47 +351,92 @@ export function CustomerHeader() {
             </section>
           ) : null}
         </div>
-
-        <label className="header-search">
-          <Search size={17} aria-hidden />
-          <input
-            aria-label="Search meals and restaurants"
-            placeholder="Search for dishes, thalis, combos..."
-          />
-        </label>
-        <nav className="desktop-nav" aria-label="Primary">
-          <Link href={ROUTES.customer.home}>Home</Link>
-          <Link href={ROUTES.customer.restaurants}>Restaurants</Link>
-          <Link href={ROUTES.customer.offers}>Offers</Link>
-          <Link href={ROUTES.customer.orders}>Orders</Link>
-        </nav>
-        <div className="header-auth-actions">
-          <Link
-            className={`account-link ${user ? 'account-link--profile' : ''}`}
-            href={user ? ROUTES.customer.profile : ROUTES.customer.login}
-          >
-            {user ? (
-              <span className="account-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
-            ) : (
-              <UserRound size={18} />
-            )}
-            <span>{user ? user.name.split(' ')[0] : 'Sign in'}</span>
-          </Link>
-          {user ? (
-            <button className="header-signout" type="button" onClick={signOut}>
-              <LogOut size={17} />
-              <span>Sign out</span>
-            </button>
-          ) : (
-            <Link className="header-signup" href={ROUTES.customer.register}>
-              Sign up
-            </Link>
-          )}
         </div>
-        <Link className="cart-link" href={ROUTES.customer.cart}>
-          <ShoppingBag size={18} />
-          <span>Cart</span>
-        </Link>
+        </div>
+
+        <nav className="header-right-nav" aria-label="Primary">
+          <Link href={ROUTES.customer.home} className="nav-item">
+            <Home size={18} />
+            <span>Home</span>
+          </Link>
+          <Link href={ROUTES.customer.restaurants} className="nav-item">
+            <UtensilsCrossed size={18} />
+            <span>Restaurants</span>
+          </Link>
+          <Link href={ROUTES.customer.restaurants} className="nav-item">
+            <Search size={18} />
+            <span>Search</span>
+          </Link>
+          <Link href={ROUTES.customer.offers} className="nav-item offers-link">
+            <Percent size={18} />
+            <span>Offers <span className="new-badge">NEW</span></span>
+          </Link>
+          <Link href={ROUTES.customer.help} className="nav-item">
+            <CircleHelp size={18} />
+            <span>Help</span>
+          </Link>
+          {/* User icon with dropdown */}
+          <div className="header-user-menu" ref={userMenuRef}>
+            <button
+              type="button"
+              className="nav-item user-icon-btn"
+              aria-label="User menu"
+              onClick={() => setUserMenuOpen((v) => !v)}
+            >
+              <UserRound size={20} />
+              {user && <span className="user-online-dot" />}
+            </button>
+
+            {userMenuOpen && (
+              <div className="user-dropdown">
+                {user ? (
+                  <>
+                    <div className="user-dropdown-header">
+                      <UserRound size={28} className="user-dropdown-avatar" />
+                      <div>
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                      </div>
+                    </div>
+                    <div className="user-dropdown-divider" />
+                    <Link href={ROUTES.customer.profile} className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                      <UserRound size={16} /> My Profile
+                    </Link>
+                    <Link href={ROUTES.customer.orders} className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                      <ShoppingBag size={16} /> My Orders
+                    </Link>
+                    <Link href={ROUTES.customer.addresses} className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                      <MapPin size={16} /> Addresses
+                    </Link>
+                    <div className="user-dropdown-divider" />
+                    <button type="button" className="user-dropdown-item user-dropdown-signout" onClick={() => { setUserMenuOpen(false); signOut(); }}>
+                      <LogOut size={16} /> Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href={ROUTES.customer.login} className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                      <UserRound size={16} /> Sign In
+                    </Link>
+                    <Link href={ROUTES.customer.register} className="user-dropdown-item" onClick={() => setUserMenuOpen(false)}>
+                      <UserRound size={16} /> Register
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Cart icon only with badge */}
+          <Link className="nav-item cart-link" href={ROUTES.customer.cart} aria-label="Cart">
+            <div className="cart-icon-wrapper">
+              <ShoppingBag size={20} strokeWidth={2.5} />
+              {cartItemCount > 0 && (
+                <span className="cart-count">{cartItemCount}</span>
+              )}
+            </div>
+          </Link>
+        </nav>
         <button className="mobile-menu" aria-label="Open menu" type="button">
           <Menu />
         </button>
