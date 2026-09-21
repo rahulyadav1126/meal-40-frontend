@@ -145,6 +145,17 @@ function DeliveryCard({
             >
               Verify OTP & Complete
             </Button>
+            <Button
+              variant="danger"
+              disabled={actionState.isLoading}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to cancel this order?')) {
+                  run('cancel');
+                }
+              }}
+            >
+              Cancel Order
+            </Button>
           </>
         ) : null}
       </div>
