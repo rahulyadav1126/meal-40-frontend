@@ -18,6 +18,13 @@ h4 {
   background: rgb(250 248 255 / 92%);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--p40-border);
+  transition: background-color 0.2s, backdrop-filter 0.2s, border-color 0.2s;
+}
+
+.customer-header--transparent {
+  background: transparent;
+  backdrop-filter: blur(3px);
+  border-color: transparent;
 }
 
 .customer-header__inner {
@@ -597,17 +604,26 @@ h4 {
 }
 
 .hero {
-  padding: 3.2rem 0;
-  background:
-    radial-gradient(circle at 80% 15%, #ffe4e6 0, transparent 28%),
-    linear-gradient(135deg, #fff 0, #faf8ff 55%, #f2f3ff 100%);
+  padding: calc(5rem + 81px) 0 5rem 0;
+  margin-top: -81px;
+  background-image: 
+    linear-gradient(to right, #ebe3d3 0%, #ebe3d3 30%, transparent 65%),
+    url('/hero-bg.jpg');
+  background-position: right center, right center;
+  background-size: cover, cover;
+  background-repeat: no-repeat, no-repeat;
+  background-color: #ebe3d3;
+  min-height: max(550px, calc(100vh - 80px));
+  border-radius: 0 0 24px 24px;
 }
 
 .hero__grid {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 3rem;
+  display: flex;
   align-items: center;
+}
+
+.hero__copy {
+  max-width: 60%;
 }
 
 .hero__eyebrow {
@@ -623,7 +639,10 @@ h4 {
 }
 
 .hero h1 {
-  font-size: clamp(2.35rem, 5vw, 4.4rem);
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: clamp(2.35rem, 5vw, 4.8rem);
+  font-weight: 700;
+  color: #1e293b;
   line-height: 1.02;
   margin: 1rem 0;
   max-width: 760px;
@@ -648,6 +667,36 @@ h4 {
   margin: 1.5rem 0;
 }
 
+.hero__actions button {
+  transition: all 0.3s ease;
+  border: 1.5px solid transparent;
+}
+
+.hero__actions button:first-child {
+  background-color: #df5c4e;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px -4px rgba(223, 92, 78, 0.6);
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+}
+
+.hero__actions button:last-child {
+  background-color: transparent;
+  color: #166534;
+  border-color: #166534;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+}
+
+.hero__actions button:hover {
+  background-color: transparent;
+  color: #166534;
+  border-color: #166534;
+  box-shadow: 0 6px 25px -2px rgba(223, 92, 78, 0.6);
+}
+
 .hero__proof {
   display: flex;
   gap: 1.25rem;
@@ -656,9 +705,7 @@ h4 {
 }
 
 .hero__mosaic {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  display: none;
 }
 
 .meal-tile {
@@ -696,31 +743,49 @@ h4 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  padding-block: 2rem;
+  margin-top: -60px;
+  position: relative;
+  z-index: 10;
+  padding-bottom: 0;
 }
 
 .benefit-card {
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
-  gap: 0.8rem;
+  gap: 1rem;
   align-items: start;
+  background-color: #fcfaf6;
+  border: 1px solid #ebdcc4;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.benefit-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
 }
 
 .benefit-card>span {
   background: #ffe4e6;
   color: var(--p40-primary);
-  border-radius: 9px;
-  padding: 0.55rem;
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.benefit-card strong {
+  font-size: 1.05rem;
 }
 
 .benefit-card p {
-  margin: 0.35rem 0 0;
+  margin: 0.4rem 0 0;
   color: var(--p40-muted);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .home-section {
-  padding-block: 3rem;
+  padding: 2rem 0 3rem 0;
 }
 
 .section-heading {
@@ -1559,6 +1624,10 @@ h4 {
     grid-template-columns: 1fr;
   }
 
+  .hero__copy {
+    max-width: 100%;
+  }
+
   .hero__mosaic {
     max-width: 720px;
   }
@@ -1696,6 +1765,8 @@ h4 {
 
   .hero {
     padding-top: 2rem;
+    background-size: auto, cover;
+    background-position: left center, center right;
   }
 
   .hero__mosaic {

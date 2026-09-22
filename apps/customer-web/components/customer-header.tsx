@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import {
   Check,
@@ -102,6 +102,17 @@ export function CustomerHeader() {
   const [selectedAddress, setSelectedAddress] = useState<AddressSelection | null>(null);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const isHome = pathname === ROUTES.customer.home;
+  const isTransparent = isHome && !isScrolled;
 
   const { data: addresses } = useAddressesQuery(undefined, { skip: !user });
 
@@ -206,7 +217,7 @@ export function CustomerHeader() {
   };
 
   return (
-    <header className="customer-header">
+    <header className={`customer-header ${isTransparent ? 'customer-header--transparent' : ''}`}>
       <div className="customer-header__inner p40-container">
         <div className="header-left">
           <Link className="brand-logo" href={ROUTES.customer.home}>
