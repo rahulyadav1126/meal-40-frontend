@@ -206,11 +206,12 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
             )}
           </div>
         ) : (
-          <form onSubmit={submit} className="menu-item-form">
-            <div className="menu-item-form__fields">
+          <form onSubmit={submit} className="flex flex-col gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
               {restaurants.length > 1 ? (
-                <label className="p40-field">
-                  <span className="p40-label">Restaurant</span>
+                <label className="grid gap-1">
+                  <span className="font-semibold text-sm text-[#06402b]">Restaurant</span>
                   <select
                     className="p40-input"
                     value={form.restaurantId}
@@ -225,8 +226,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   </select>
                 </label>
               ) : null}
-              <label className="p40-field">
-                <span className="p40-label">Item name</span>
+              <label className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">Item name</span>
                 <Input
                   autoFocus
                   maxLength={160}
@@ -236,10 +237,10 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   required
                 />
               </label>
-              <label className="p40-field">
-                <span className="p40-label">Category</span>
+              <label className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">Category</span>
                 <select
-                  className="p40-input"
+                  className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#fc8019] focus:ring-1 focus:ring-[#fc8019] transition-all text-[#06402b] w-full"
                   value={form.categoryId}
                   onChange={(event) => update('categoryId', event.target.value)}
                   required
@@ -254,20 +255,20 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   ))}
                 </select>
               </label>
-              <label className="p40-field menu-item-form__wide">
-                <span className="p40-label">
+              <label className="grid gap-1 md:col-span-2">
+                <span className="font-semibold text-sm text-[#06402b]">
                   Description <small>Optional</small>
                 </span>
                 <textarea
-                  className="p40-input menu-item-form__textarea"
+                  className="w-full min-h-[100px] px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#fc8019] focus:ring-1 focus:ring-[#fc8019] transition-all resize-y text-[#06402b] placeholder:text-slate-400"
                   maxLength={2000}
                   placeholder="Rich and creamy paneer curry prepared with aromatic spices..."
                   value={form.description}
                   onChange={(event) => update('description', event.target.value)}
                 />
               </label>
-              <label className="p40-field">
-                <span className="p40-label">Price</span>
+              <label className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">Price</span>
                 <span className="money-input">
                   <span>₹</span>
                   <Input
@@ -281,8 +282,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   />
                 </span>
               </label>
-              <label className="p40-field">
-                <span className="p40-label">
+              <label className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">
                   Discount price <small>Optional</small>
                 </span>
                 <span className="money-input">
@@ -298,7 +299,7 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                 </span>
               </label>
               <fieldset className="p40-field menu-food-type">
-                <legend className="p40-label">Food type</legend>
+                <legend className="font-semibold text-sm text-[#06402b]">Food type</legend>
                 <div>
                   {[FoodType.VEG, FoodType.NON_VEG, FoodType.EGG].map((type) => (
                     <label key={type} className={form.foodType === type ? 'selected' : ''}>
@@ -321,8 +322,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   ))}
                 </div>
               </fieldset>
-              <label className="p40-field">
-                <span className="p40-label">Preparation time</span>
+              <label className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">Preparation time</span>
                 <span className="prep-input">
                   <Input
                     type="number"
@@ -336,9 +337,9 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                 </span>
               </label>
             </div>
-            <div className="menu-item-form__side">
-              <div className="p40-field">
-                <span className="p40-label">
+            <div className="w-full md:w-[300px] flex flex-col gap-4 shrink-0">
+              <div className="grid gap-1">
+                <span className="font-semibold text-sm text-[#06402b]">
                   Item image <small>Recommended</small>
                 </span>
                 <label className={`menu-image-upload ${preview ? 'has-image' : ''}`}>
@@ -367,10 +368,10 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   </span>
                 </label>
               </div>
-              <div className="availability-card">
+              <div className="bg-white border border-slate-100 shadow-sm p-4 rounded-xl flex justify-between items-center gap-4">
                 <div>
-                  <strong>Availability</strong>
-                  <span>Customers can order this item</span>
+                  <strong className="block text-sm text-[#06402b]">Availability</strong>
+                  <span className="text-xs text-slate-500">Customers can order this item</span>
                 </div>
                 <label className="menu-switch">
                   <input
@@ -381,24 +382,26 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   <span />
                 </label>
               </div>
-              <div className="menu-tip">
-                <strong>Tip for better sales</strong>
-                <p>
+              <div className="bg-blue-50/50 border border-blue-100/50 p-4 rounded-xl text-blue-800 text-sm">
+                <strong className="block mb-1">Tip for better sales</strong>
+                <p className="m-0 text-slate-500 text-xs">
                   Use a clear, well-lit photo and a concise description that highlights the dish.
                 </p>
               </div>
             </div>
+            </div>
             {error ? (
-              <div className="menu-form-error" role="alert">
+              <div className="text-red-500 bg-red-50 p-3 rounded-lg text-sm w-full" role="alert">
                 {error}
               </div>
             ) : null}
-            <footer className="menu-dialog__footer">
-              <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>
+            <footer className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-slate-100 w-full sm:justify-end">
+              <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button
                 type="submit"
+                className="w-full sm:w-auto"
                 disabled={isSaving || !categories.length || !restaurants.length}
               >
                 {isSaving ? (

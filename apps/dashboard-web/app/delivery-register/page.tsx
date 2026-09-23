@@ -44,28 +44,28 @@ export default function DeliveryRegisterPage() {
     }
   }
   return (
-    <main className="delivery-register">
-      <Card className="form-card">
-        <span className="section-kicker">Plate40 Delivery</span>
-        <h1>Become a delivery partner</h1>
-        <p>
+    <main className="min-h-screen grid place-items-center p-6 bg-[linear-gradient(145deg,#0f172a,#1d4ed8)]">
+      <Card className="grid gap-4 p-7 w-[min(760px,100%)] shadow-2xl bg-white">
+        <span className="text-[#fc8019] text-xs font-extrabold tracking-[0.1em] uppercase block">Plate40 Delivery</span>
+        <h1 className="m-0 text-2xl font-bold">Become a delivery partner</h1>
+        <p className="m-0 text-slate-500 text-sm">
           Create your driver profile. An admin will verify your documents before you can go online.
         </p>
-        <form className="form-grid" onSubmit={submit}>
-          <label className="p40-field">
-            <span className="p40-label">Full name</span>
+        <form className="grid gap-4 mt-2" onSubmit={submit}>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Full name</span>
             <Input required value={values.name} onChange={(e) => update('name', e.target.value)} />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Mobile number</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Mobile number</span>
             <Input
               required
               value={values.phone}
               onChange={(e) => update('phone', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Email</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Email</span>
             <Input
               type="email"
               required
@@ -73,8 +73,8 @@ export default function DeliveryRegisterPage() {
               onChange={(e) => update('email', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Password</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Password</span>
             <Input
               type="password"
               minLength={8}
@@ -83,23 +83,23 @@ export default function DeliveryRegisterPage() {
               onChange={(e) => update('password', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Address</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Address</span>
             <Input
               required
               value={values.address}
               onChange={(e) => update('address', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Profile photo URL</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Profile photo URL</span>
             <Input
               value={values.profilePhotoUrl}
               onChange={(e) => update('profilePhotoUrl', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Vehicle type</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Vehicle type</span>
             <select
               className="p40-input"
               value={values.vehicleType}
@@ -110,24 +110,24 @@ export default function DeliveryRegisterPage() {
               ))}
             </select>
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Vehicle number</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Vehicle number</span>
             <Input
               required
               value={values.vehicleNumber}
               onChange={(e) => update('vehicleNumber', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Driving licence number</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Driving licence number</span>
             <Input
               required
               value={values.documentNumber}
               onChange={(e) => update('documentNumber', e.target.value)}
             />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Licence/document URL</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Licence/document URL</span>
             <Input
               value={values.documentUrl}
               onChange={(e) => update('documentUrl', e.target.value)}
@@ -137,8 +137,8 @@ export default function DeliveryRegisterPage() {
             {state.isLoading ? 'Submitting...' : 'Register as delivery partner'}
           </Button>
         </form>
-        <p>
-          Already registered? <Link href="/login">Sign in</Link>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          Already registered? <Link href="/login" className="text-[#fc8019] font-bold hover:underline">Sign in</Link>
         </p>
       </Card>
     </main>

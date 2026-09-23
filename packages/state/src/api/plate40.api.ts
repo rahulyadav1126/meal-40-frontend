@@ -240,6 +240,13 @@ export const plate40Api = baseApi.injectEndpoints({
       query: (data) => ({ url: API_PATHS.merchant.restaurants, method: 'POST', data }),
       invalidatesTags: ['Restaurants'],
     }),
+    updateMerchantRestaurant: builder.mutation<Restaurant, Partial<CreateRestaurantInput> & { id: number; openingStatus?: string }>({
+      query: (data) => {
+        const { id, ...body } = data;
+        return { url: `${API_PATHS.merchant.restaurants}/${id}`, method: 'PATCH', data: body };
+      },
+      invalidatesTags: ['Restaurants'],
+    }),
     categories: builder.query<Category[], void>({ query: () => ({ url: API_PATHS.categories }) }),
     updateMerchantOrder: builder.mutation<
       Order,
@@ -407,6 +414,7 @@ export const {
   useMerchantOrdersQuery,
   useMerchantRestaurantsQuery,
   useCreateMerchantRestaurantMutation,
+  useUpdateMerchantRestaurantMutation,
   useCategoriesQuery,
   useUpdateMerchantOrderMutation,
   useMerchantMenuQuery,

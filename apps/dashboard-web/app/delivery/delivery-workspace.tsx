@@ -62,9 +62,9 @@ function DeliveryCard({
     }
   }
   return (
-    <Card className="delivery-card">
-      <div className="delivery-card__head">
-        <strong>#{delivery.order?.orderNumber}</strong>
+    <Card className="p-4 sm:p-5 flex flex-col gap-3 bg-white shadow-sm rounded-xl border border-slate-100">
+      <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+        <strong className="text-lg">#{delivery.order?.orderNumber}</strong>
         <Badge tone={delivery.status === DeliveryStatus.DELIVERED ? 'success' : 'indigo'}>
           {humanize(delivery.status)}
         </Badge>
@@ -113,7 +113,7 @@ function DeliveryCard({
           Open customer location in Maps
         </a>
       ) : null}
-      <div className="delivery-card__actions">
+      <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-slate-100">
         {available ? (
           <>
             <Button disabled={actionState.isLoading} onClick={() => run('accept')}>
@@ -185,13 +185,13 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
   }, [dispatch]);
   if (profile.isLoading)
     return (
-      <main className="dashboard-page">
+      <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
         <Skeleton />
       </main>
     );
   if (profile.isError || !profile.data)
     return (
-      <main className="dashboard-page">
+      <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
         <ErrorState message="Delivery partner profile is unavailable." />
       </main>
     );
@@ -202,7 +202,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
   let content: React.ReactNode;
   if (mode === 'available')
     content = available.data?.length ? (
-      <div className="delivery-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {available.data.map((item) => (
           <DeliveryCard key={item.id} delivery={item} available />
         ))}
@@ -219,7 +219,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
     );
   else if (mode === 'active')
     content = active.data?.length ? (
-      <div className="delivery-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {active.data.map((item) => (
           <DeliveryCard key={item.id} delivery={item} />
         ))}
@@ -229,7 +229,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
     );
   else if (mode === 'history')
     content = history.data?.length ? (
-      <div className="delivery-grid">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {history.data.map((item) => (
           <DeliveryCard key={item.id} delivery={item} />
         ))}
@@ -243,7 +243,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
   else if (mode === 'earnings')
     content = (
       <>
-        <div className="metric-grid">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <small>Today</small>
             <h2>₹{stats?.today ?? '0.00'}</h2>
@@ -281,7 +281,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
   else
     content = (
       <>
-        <div className="metric-grid">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
             <small>Available</small>
             <h2>{available.data?.length ?? 0}</h2>
@@ -305,7 +305,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
       </>
     );
   return (
-    <main className="dashboard-page delivery-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
       <PageHeader
         title={title}
         description="Manage pickups, handoffs and earnings in real time."

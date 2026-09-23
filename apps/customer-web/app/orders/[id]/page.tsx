@@ -80,18 +80,18 @@ export default function OrderDetailPage() {
   const current = ORDER_FLOW.indexOf(order.orderStatus as (typeof ORDER_FLOW)[number]);
 
   return (
-    <main className="page-shell p40-container">
+    <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader
         title="Checkout & live delivery"
         description={`Order #${order.orderNumber}`}
         actions={<OrderStatusBadge status={order.orderStatus} />}
       />
 
-      <div className="tracking-layout">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
         {/* ── Left panel: timeline OR cancellation notice ─────────────────── */}
-        <Card className="tracking-card">
-          <span className="section-kicker">Live kitchen &amp; logistics telemetry</span>
-          <h2>{order.restaurant?.name ?? 'Your Plate40 kitchen'}</h2>
+        <Card className="p-5">
+          <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Live kitchen &amp; logistics telemetry</span>
+          <h2 className="mt-2 mb-5">{order.restaurant?.name ?? 'Your Plate40 kitchen'}</h2>
 
           {order.delivery?.deliveryPartner ? (
             <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: '#eef2ff' }}>
@@ -226,21 +226,24 @@ export default function OrderDetailPage() {
             </div>
           ) : (
             /* ── Normal happy-path timeline ───────────────────────────────── */
-            <div className="timeline">
+            <div className="grid">
               {ORDER_FLOW.map((status, index) => {
                 const complete = index <= current;
                 const isCurrent = status === order.orderStatus;
                 return (
                   <div
                     key={status}
-                    className={
-                      complete ? 'timeline__step timeline__step--complete' : 'timeline__step'
-                    }
+                    className={`grid grid-cols-[38px_1fr] gap-2.5 min-h-[82px] ${complete ? 'text-p40-slate' : 'text-slate-400'}`}
                   >
-                    <span>{complete ? <Check size={16} /> : <Circle size={14} />}</span>
+                    <span className={`w-7 h-7 rounded-full grid place-items-center relative ${complete ? 'text-white bg-p40-success' : 'bg-slate-100'}`}>
+                      {complete ? <Check size={16} /> : <Circle size={14} />}
+                      {index < ORDER_FLOW.length - 1 && (
+                        <div className={`absolute top-7 left-[13px] w-[2px] h-[54px] ${complete ? 'bg-green-300' : 'bg-slate-200'}`} />
+                      )}
+                    </span>
                     <div>
                       <strong>{humanize(status)}</strong>
-                      <p>
+                      <p className="my-1 text-[0.82rem]">
                         {isCurrent
                           ? 'Current order stage'
                           : index < current
@@ -256,35 +259,35 @@ export default function OrderDetailPage() {
         </Card>
 
         {/* ── Right panel: order summary ──────────────────────────────────── */}
-        <Card className="tracking-summary">
-          <span className="section-kicker">Order summary</span>
-          <h2>Payment &amp; total</h2>
+        <Card className="sticky top-[90px] p-5 grid gap-4">
+          <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Order summary</span>
+          <h2 className="my-1">Payment &amp; total</h2>
 
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Payment</span>
             <PaymentStatusBadge status={order.paymentStatus} />
           </div>
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Method</span>
             <strong>{humanize(order.paymentMethod)}</strong>
           </div>
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Subtotal</span>
             <Price value={order.subtotal} />
           </div>
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Delivery fee</span>
             <Price value={order.deliveryFee} />
           </div>
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Platform fee</span>
             <Price value={order.platformFee} />
           </div>
-          <div>
+          <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Taxes</span>
             <Price value={order.taxAmount} />
           </div>
-          <div className="cart-summary__total">
+          <div className="flex justify-between gap-4 text-[0.85rem] border-t border-dashed border-p40-border pt-4 font-[800] text-[1.2rem] font-heading">
             <span>Total</span>
             <Price value={order.totalAmount} />
           </div>

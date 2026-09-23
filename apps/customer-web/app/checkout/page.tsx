@@ -30,20 +30,20 @@ export default function CheckoutPage() {
   }, [addresses.data, checkout.addressId, dispatch]);
   if (carts.isLoading || addresses.isLoading)
     return (
-      <main className="page-shell p40-container">
+      <main className="p40-container py-8 pb-16 min-h-[70vh]">
         <Skeleton />
       </main>
     );
   if (carts.isError || addresses.isError)
     return (
-      <main className="page-shell p40-container">
+      <main className="p40-container py-8 pb-16 min-h-[70vh]">
         <ErrorState message="Sign in to continue checkout." />
       </main>
     );
   const cart = carts.data?.[0];
   if (!cart)
     return (
-      <main className="page-shell p40-container">
+      <main className="p40-container py-8 pb-16 min-h-[70vh]">
         <EmptyState
           title="No cart to checkout"
           description="Add a meal before starting checkout."
@@ -52,7 +52,7 @@ export default function CheckoutPage() {
     );
   if (!addresses.data?.length)
     return (
-      <main className="page-shell p40-container">
+      <main className="p40-container py-8 pb-16 min-h-[70vh]">
         <PageHeader title="Checkout" />
         <EmptyState
           title="Add a delivery address"
@@ -97,29 +97,29 @@ export default function CheckoutPage() {
     }
   }
   return (
-    <main className="page-shell p40-container">
+    <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader
         title="Checkout & delivery"
         description="Confirm your address and payment preference."
       />
-      <div className="checkout-layout">
-        <section className="checkout-stack">
-          <Card className="checkout-card">
-            <div className="checkout-card__heading">
-              <MapPin />
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+        <section className="grid gap-3.5">
+          <Card className="p-5">
+            <div className="flex items-start gap-3 mb-4">
+              <MapPin className="text-p40-primary p-2 box-content bg-rose-100 rounded-[9px]" />
               <div>
-                <span className="section-kicker">Delivery address</span>
-                <h2>Where should we deliver?</h2>
+                <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Delivery address</span>
+                <h2 className="my-1">Where should we deliver?</h2>
               </div>
             </div>
-            <div className="address-options">
+            <div className="grid gap-2.5">
               {addresses.data.map((address) => (
                 <label
-                  className={
+                  className={`border rounded-[10px] p-3.5 flex items-center gap-3 cursor-pointer ${
                     checkout.addressId === address.id
-                      ? 'address-option address-option--selected'
-                      : 'address-option'
-                  }
+                      ? 'border-p40-primary bg-rose-50 shadow-[0_0_0_2px_rgba(225,29,72,0.08)]'
+                      : 'border-p40-border'
+                  }`}
                   key={address.id}
                 >
                   <input
@@ -130,7 +130,7 @@ export default function CheckoutPage() {
                   />
                   <div>
                     <strong>{address.label}</strong>
-                    <p>
+                    <p className="text-p40-muted mt-1 mb-0">
                       {address.addressLine1}, {address.city}, {address.postalCode}
                     </p>
                   </div>
@@ -138,20 +138,20 @@ export default function CheckoutPage() {
               ))}
             </div>
           </Card>
-          <Card className="checkout-card">
-            <div className="checkout-card__heading">
-              <WalletCards />
+          <Card className="p-5">
+            <div className="flex items-start gap-3 mb-4">
+              <WalletCards className="text-p40-primary p-2 box-content bg-rose-100 rounded-[9px]" />
               <div>
-                <span className="section-kicker">Payment</span>
-                <h2>Select payment method</h2>
+                <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Payment</span>
+                <h2 className="my-1">Select payment method</h2>
               </div>
             </div>
             <label
-              className={
+              className={`border rounded-[10px] p-3.5 flex items-center gap-3 cursor-pointer ${
                 checkout.paymentMethod === PaymentMethod.ONLINE
-                  ? 'payment-option payment-option--selected'
-                  : 'payment-option'
-              }
+                  ? 'border-p40-primary bg-rose-50 shadow-[0_0_0_2px_rgba(225,29,72,0.08)]'
+                  : 'border-p40-border'
+              }`}
             >
               <input
                 type="radio"
@@ -159,17 +159,17 @@ export default function CheckoutPage() {
                 onChange={() => dispatch(setPaymentMethod(PaymentMethod.ONLINE))}
               />
               <CreditCard />
-              <span>
+              <span className="grid">
                 <strong>Test online payment</strong>
-                <small>Redirects to the configured testing URL. Razorpay is not loaded.</small>
+                <small className="text-p40-muted mt-1">Redirects to the configured testing URL. Razorpay is not loaded.</small>
               </span>
             </label>
             <label
-              className={
+              className={`border rounded-[10px] p-3.5 flex items-center gap-3 cursor-pointer mt-2.5 ${
                 checkout.paymentMethod === PaymentMethod.COD
-                  ? 'payment-option payment-option--selected'
-                  : 'payment-option'
-              }
+                  ? 'border-p40-primary bg-rose-50 shadow-[0_0_0_2px_rgba(225,29,72,0.08)]'
+                  : 'border-p40-border'
+              }`}
             >
               <input
                 type="radio"
@@ -177,29 +177,29 @@ export default function CheckoutPage() {
                 onChange={() => dispatch(setPaymentMethod(PaymentMethod.COD))}
               />
               <WalletCards />
-              <span>
+              <span className="grid">
                 <strong>Cash on delivery</strong>
-                <small>Pay when your meal arrives.</small>
+                <small className="text-p40-muted mt-1">Pay when your meal arrives.</small>
               </span>
             </label>
           </Card>
         </section>
-        <Card className="checkout-summary">
+        <Card className="sticky top-[90px] p-5 grid gap-4">
           <ShieldCheck color="#10b981" />
-          <span className="section-kicker">Secure checkout</span>
-          <h2>{cart.restaurant?.name ?? 'Plate40 order'}</h2>
-          <p>
+          <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Secure checkout</span>
+          <h2 className="my-1">{cart.restaurant?.name ?? 'Plate40 order'}</h2>
+          <p className="text-p40-muted leading-[1.6] m-0">
             Backend pricing, availability, delivery radius, coupons, fees, and taxes are validated
             when you place the order.
           </p>
-          <Button disabled={state.isLoading || !checkout.addressId} onClick={placeOrder}>
+          <Button disabled={state.isLoading || !checkout.addressId} onClick={placeOrder} className="w-full">
             {state.isLoading
               ? 'Placing order...'
               : checkout.paymentMethod === PaymentMethod.ONLINE
                 ? 'Place order & open test payment'
                 : 'Place COD order'}
           </Button>
-          <small>Online status is never marked paid from a browser redirect alone.</small>
+          <small className="text-p40-muted leading-[1.5]">Online status is never marked paid from a browser redirect alone.</small>
         </Card>
       </div>
     </main>

@@ -3,8 +3,9 @@
 import { useState, type FormEvent } from 'react';
 import { Crosshair, LoaderCircle, Store } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreateMerchantRestaurantMutation } from '@plate40/state';
+import { useCreateMerchantRestaurantMutation, useUpdateMerchantRestaurantMutation } from '@plate40/state';
 import { AddressAutocomplete, Button, Card, Input } from '@plate40/ui';
+import type { Restaurant } from '@plate40/types';
 
 const INITIAL = {
   name: '',
@@ -28,10 +29,31 @@ function apiMessage(error: unknown) {
   return undefined;
 }
 
-export function RestaurantSetupForm() {
-  const [draft, setDraft] = useState(INITIAL);
+export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Restaurant, onCancel?: () => void }) {
+  const [draft, setDraft] = useState(
+    restaurant
+      ? {
+          name: restaurant.name,
+          description: restaurant.description || '',
+          phone: '', // phone is on user not restaurant, but assuming it's passed or not needed for update
+          email: '',
+          addressLine1: restaurant.addressLine1 || '',
+          addressLine2: '',
+          city: restaurant.city || '',
+          state: restaurant.state || '',
+          postalCode: '',
+          latitude: '0',
+          longitude: '0',
+          deliveryRadiusKm: restaurant.deliveryRadiusKm,
+          minimumOrderAmount: restaurant.minimumOrderAmount,
+        }
+      : INITIAL
+  );
   const [locating, setLocating] = useState(false);
-  const [createRestaurant, state] = useCreateMerchantRestaurantMutation();
+  const [createRestaurant, createState] = useCreateMerchantRestaurantMutation();
+  const [updateRestaurant, updateState] = useUpdateMerchantRestaurantMutation();
+  const isLoading = createState.isLoading || updateState.isLoading;
+
   const update = (key: keyof typeof draft, value: string) =>
     setDraft((current) => ({ ...current, [key]: value }));
   const useCurrentCoordinates = () => {
@@ -60,15 +82,25 @@ export function RestaurantSetupForm() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      await createRestaurant({
+      const payload = {
         ...draft,
         description: draft.description.trim() || undefined,
-        email: draft.email.trim() || undefined,
-        addressLine2: draft.addressLine2.trim() || undefined,
-      }).unwrap();
-      toast.success('Restaurant profile created. You can now add menu items.');
+        email: draft.email?.trim() || undefined,
+        addressLine2: draft.addressLine2?.trim() || undefined,
+      };
+      
+      if (restaurant) {
+        // We don't send the phone number when updating, since the input is hidden
+        const { phone, ...updatePayload } = payload;
+        await updateRestaurant({ id: restaurant.id, ...updatePayload }).unwrap();
+        toast.success('Restaurant profile updated successfully.');
+        if (onCancel) onCancel();
+      } else {
+        await createRestaurant(payload).unwrap();
+        toast.success('Restaurant profile created. You can now add menu items.');
+      }
     } catch (error) {
-      toast.error(apiMessage(error) ?? 'Could not create the restaurant profile.');
+      toast.error(apiMessage(error) ?? (restaurant ? 'Could not update profile.' : 'Could not create the restaurant profile.'));
     }
   };
 
@@ -79,17 +111,18 @@ export function RestaurantSetupForm() {
           <Store size={24} />
         </span>
         <div>
-          <span className="section-kicker">FIRST-TIME SETUP</span>
-          <h2>Create your restaurant profile</h2>
+          <span className="section-kicker">{restaurant ? 'EDIT PROFILE' : 'FIRST-TIME SETUP'}</span>
+          <h2>{restaurant ? 'Edit your restaurant profile' : 'Create your restaurant profile'}</h2>
           <p>
-            Add the basic store details required before building your menu. Your restaurant goes
-            becomes visible to customers after a platform administrator approves it.
+            {restaurant 
+              ? 'Update your store details and location. Changes may require admin re-approval if significant.' 
+              : 'Add the basic store details required before building your menu. Your restaurant goes becomes visible to customers after a platform administrator approves it.'}
           </p>
         </div>
       </div>
-      <form className="restaurant-setup-form" onSubmit={submit}>
-        <label className="p40-field">
-          <span className="p40-label">Restaurant name</span>
+      <form className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start" onSubmit={submit}>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Restaurant name</span>
           <Input
             required
             minLength={2}
@@ -99,18 +132,20 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('name', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">Business phone</span>
-          <Input
-            required
-            type="tel"
-            placeholder="+919876543210"
-            value={draft.phone}
-            onChange={(event) => update('phone', event.target.value)}
-          />
-        </label>
-        <label className="p40-field">
-          <span className="p40-label">
+        {!restaurant && (
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Business phone</span>
+            <Input
+              required
+              type="tel"
+              placeholder="+919876543210"
+              value={draft.phone}
+              onChange={(event) => update('phone', event.target.value)}
+            />
+          </label>
+        )}
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">
             Business email <small>Optional</small>
           </span>
           <Input
@@ -120,20 +155,20 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('email', event.target.value)}
           />
         </label>
-        <label className="p40-field restaurant-setup-form__wide">
-          <span className="p40-label">
+        <label className="grid gap-1 md:col-span-2">
+          <span className="font-semibold text-sm text-[#06402b]">
             Description <small>Optional</small>
           </span>
           <textarea
-            className="p40-input restaurant-setup-form__textarea"
+            className="w-full min-h-[120px] px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#fc8019] focus:ring-1 focus:ring-[#fc8019] transition-all resize-y text-[#06402b] placeholder:text-slate-400"
             maxLength={2000}
             placeholder="Tell customers what makes your food special..."
             value={draft.description}
             onChange={(event) => update('description', event.target.value)}
           />
         </label>
-        <label className="p40-field restaurant-setup-form__wide">
-          <span className="p40-label">Address</span>
+        <label className="grid gap-1 md:col-span-2">
+          <span className="font-semibold text-sm text-[#06402b]">Address</span>
           <AddressAutocomplete
             required
             maxLength={255}
@@ -155,8 +190,8 @@ export function RestaurantSetupForm() {
             onError={(message) => toast.error(message)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">
             Address line 2 <small>Optional</small>
           </span>
           <Input
@@ -166,8 +201,8 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('addressLine2', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">City</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">City</span>
           <Input
             required
             maxLength={100}
@@ -176,8 +211,8 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('city', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">State</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">State</span>
           <Input
             required
             maxLength={100}
@@ -186,8 +221,8 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('state', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">Postal code</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Postal code</span>
           <Input
             required
             maxLength={20}
@@ -216,8 +251,8 @@ export function RestaurantSetupForm() {
             {locating ? 'Detecting...' : 'Use current location'}
           </Button>
         </div>
-        <label className="p40-field">
-          <span className="p40-label">Latitude</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Latitude</span>
           <Input
             required
             inputMode="decimal"
@@ -226,8 +261,8 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('latitude', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">Longitude</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Longitude</span>
           <Input
             required
             inputMode="decimal"
@@ -236,8 +271,8 @@ export function RestaurantSetupForm() {
             onChange={(event) => update('longitude', event.target.value)}
           />
         </label>
-        <label className="p40-field">
-          <span className="p40-label">Delivery radius</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Delivery radius</span>
           <span className="prep-input">
             <Input
               required
@@ -248,8 +283,8 @@ export function RestaurantSetupForm() {
             <span>km</span>
           </span>
         </label>
-        <label className="p40-field">
-          <span className="p40-label">Minimum order</span>
+        <label className="grid gap-1">
+          <span className="font-semibold text-sm text-[#06402b]">Minimum order</span>
           <span className="money-input">
             <span>₹</span>
             <Input
@@ -260,13 +295,20 @@ export function RestaurantSetupForm() {
             />
           </span>
         </label>
-        <footer className="restaurant-setup-form__footer">
-          <Button type="submit" disabled={state.isLoading}>
-            {state.isLoading ? (
+        <footer className="flex flex-col sm:flex-row gap-3 pt-6 md:col-span-2 sm:justify-end">
+          {restaurant && onCancel && (
+            <Button type="button" variant="secondary" onClick={onCancel} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+            {isLoading ? (
               <>
                 <LoaderCircle className="menu-spinner" size={17} />
-                Creating profile...
+                Saving...
               </>
+            ) : restaurant ? (
+              'Save changes'
             ) : (
               'Create restaurant profile'
             )}

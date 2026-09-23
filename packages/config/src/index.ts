@@ -91,6 +91,9 @@ export const ROUTES = {
     offers: '/offers',
     help: '/help',
     testPayment: '/payment/test',
+    terms: '/terms',
+    cookies: '/cookies',
+    privacy: '/privacy',
   },
   admin: {
     dashboard: '/admin/dashboard',

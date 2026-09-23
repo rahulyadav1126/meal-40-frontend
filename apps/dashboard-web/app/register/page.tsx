@@ -40,78 +40,46 @@ export default function MerchantRegisterPage() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: 16,
-        background: 'linear-gradient(135deg,#0f3443,#34e89e)',
-      }}
-    >
-      <Card
-        className="form-card"
-        style={{ padding: 32, width: 'min(460px,100%)', boxShadow: '0 25px 50px rgba(0,0,0,0.25)' }}
-      >
+    <main className="min-h-screen grid place-items-center p-4 bg-[linear-gradient(135deg,#0f3443,#34e89e)]">
+      <Card className="grid gap-4 p-8 w-[min(460px,100%)] shadow-2xl">
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 4 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              background: 'linear-gradient(135deg,#34e89e,#0f3443)',
-              display: 'grid',
-              placeItems: 'center',
-              fontSize: 24,
-              margin: '0 auto 12px',
-              boxShadow: '0 4px 12px rgba(52,232,158,0.35)',
-            }}
-          >
+        <div className="text-center mb-1">
+          <div className="w-[52px] h-[52px] rounded-xl bg-[linear-gradient(135deg,#34e89e,#0f3443)] grid place-items-center text-2xl mx-auto mb-3 shadow-[0_4px_12px_rgba(52,232,158,0.35)]">
             🏪
           </div>
-          <span className="section-kicker">Plate40 — Merchant</span>
-          <h1 style={{ marginTop: 4, marginBottom: 4 }}>Create Merchant Account</h1>
-          <p style={{ color: 'var(--p40-muted)', margin: 0 }}>
+          <span className="text-[#fc8019] text-xs font-extrabold tracking-[0.1em] uppercase block">Plate40 — Merchant</span>
+          <h1 className="mt-1 mb-1 text-2xl font-bold">Create Merchant Account</h1>
+          <p className="text-slate-500 m-0 text-sm">
             List your restaurant and start receiving orders on Plate40.
           </p>
         </div>
 
         {/* Info banner */}
-        <div
-          style={{
-            background: 'rgba(52,232,158,0.1)',
-            border: '1px solid rgba(52,232,158,0.35)',
-            borderRadius: 10,
-            padding: '10px 14px',
-            fontSize: '0.8rem',
-            color: '#065f46',
-          }}
-        >
+        <div className="bg-[#34e89e1a] border border-[#34e89e59] rounded-lg py-2.5 px-3.5 text-xs text-emerald-800">
           🎯 After registration your restaurant will be reviewed and approved by an admin before
           going live.
         </div>
 
         {/* Form */}
-        <form className="form-grid" onSubmit={form.handleSubmit(onSubmit)}>
-          <label className="p40-field">
-            <span className="p40-label">Owner / Business name</span>
+        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Owner / Business name</span>
             <Input autoComplete="name" placeholder="e.g. Ramesh Kumar" {...form.register('name')} />
             {form.formState.errors.name && (
-              <span className="p40-field-error">{form.formState.errors.name.message}</span>
+              <span className="text-red-500 text-xs">{form.formState.errors.name.message}</span>
             )}
           </label>
 
-          <label className="p40-field">
-            <span className="p40-label">Phone</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Phone</span>
             <Input autoComplete="tel" placeholder="+919876543210" {...form.register('phone')} />
             {form.formState.errors.phone && (
-              <span className="p40-field-error">{form.formState.errors.phone.message}</span>
+              <span className="text-red-500 text-xs">{form.formState.errors.phone.message}</span>
             )}
           </label>
 
-          <label className="p40-field">
-            <span className="p40-label">Email</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Email</span>
             <Input
               type="email"
               autoComplete="email"
@@ -119,15 +87,15 @@ export default function MerchantRegisterPage() {
               {...form.register('email')}
             />
             {form.formState.errors.email && (
-              <span className="p40-field-error">{form.formState.errors.email.message}</span>
+              <span className="text-red-500 text-xs">{form.formState.errors.email.message}</span>
             )}
           </label>
 
-          <label className="p40-field">
-            <span className="p40-label">Password</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Password</span>
             <Input type="password" autoComplete="new-password" {...form.register('password')} />
             {form.formState.errors.password && (
-              <span className="p40-field-error">{form.formState.errors.password.message}</span>
+              <span className="text-red-500 text-xs">{form.formState.errors.password.message}</span>
             )}
           </label>
 
@@ -137,19 +105,15 @@ export default function MerchantRegisterPage() {
         </form>
 
         {/* Footer links */}
-        <p
-          style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--p40-muted)', margin: 0 }}
-        >
+        <p className="text-center text-sm text-slate-500 m-0">
           Already have a merchant account?{' '}
-          <Link href="/login" style={{ color: 'var(--p40-primary)', fontWeight: 700 }}>
+          <Link href="/login" className="text-[#fc8019] font-bold hover:underline">
             Sign in
           </Link>
         </p>
-        <p
-          style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--p40-muted)', margin: 0 }}
-        >
+        <p className="text-center text-xs text-slate-500 m-0">
           Looking to order food?{' '}
-          <a href="http://localhost:3000/register" style={{ color: '#6b7280', fontWeight: 600 }}>
+          <a href="http://localhost:3000/register" className="text-slate-500 font-semibold hover:underline">
             Customer sign up →
           </a>
         </p>

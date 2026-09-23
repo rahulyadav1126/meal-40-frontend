@@ -12,7 +12,7 @@ import { UserRole } from '@plate40/types';
 import { Button, Card, Input } from '@plate40/ui';
 import { loginSchema, registerSchema, type RegisterValues } from '@plate40/validation';
 
-export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
+export function AuthForm({ mode, isModal, onSuccess }: { mode: 'login' | 'register'; isModal?: boolean; onSuccess?: () => void }) {
   const router = useRouter();
   const [login, loginState] = useLoginMutation();
   const [registerUser, registerState] = useRegisterMutation();
@@ -43,7 +43,11 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       }
       saveSession(session);
       toast.success(isRegister ? 'Account created' : 'Welcome back');
-      router.push(ROUTES.customer.home);
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.push(ROUTES.customer.home);
+      }
     } catch (error) {
       const message =
         typeof error === 'object' && error && 'data' in error
@@ -52,19 +56,18 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       toast.error(message ?? 'Unable to continue. Please check your details.');
     }
   }
-  return (
-    <main className="page-shell">
-      <Card className="form-card">
-        <div>
-          <span className="section-kicker">Plate40 account</span>
-          <h1>{isRegister ? 'Create your account' : 'Welcome back'}</h1>
-          <p>
+  const content = (
+    <Card className={isModal ? "w-full border-none shadow-none grid gap-4 p-2 sm:p-4" : "w-[min(480px,calc(100%-2rem))] my-16 mx-auto p-6 md:p-8 grid gap-4"}>
+      <div>
+          <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Plate40 account</span>
+          <h1 className="m-0">{isRegister ? 'Create your account' : 'Welcome back'}</h1>
+          <p className="m-0 text-p40-muted mt-2">
             {isRegister
               ? 'Join Plate40 for budget-friendly neighborhood meals.'
               : 'Sign in to order, track, and manage your meals.'}
           </p>
         </div>
-        <form className="form-grid" onSubmit={form.handleSubmit(onSubmit)}>
+        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
           {isRegister ? (
             <>
               <label className="p40-field">
@@ -101,20 +104,23 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
               <span className="p40-field-error">{form.formState.errors.password.message}</span>
             ) : null}
           </label>
-          <Button disabled={state.isLoading} type="submit">
+          <Button disabled={state.isLoading} type="submit" className="w-full">
             {state.isLoading ? 'Please wait...' : isRegister ? 'Create account' : 'Sign in'}
           </Button>
         </form>
-        <p>
+        <p className="m-0 text-p40-muted">
           {isRegister ? 'Already have an account?' : 'New to Plate40?'}{' '}
           <Link
-            style={{ color: 'var(--p40-primary)', fontWeight: 700 }}
+            className="text-p40-primary font-bold hover:underline"
             href={isRegister ? ROUTES.customer.login : ROUTES.customer.register}
           >
             {isRegister ? 'Sign in' : 'Create an account'}
           </Link>
         </p>
       </Card>
-    </main>
   );
+
+  if (isModal) return content;
+
+  return <main className="py-8 pb-16 min-h-[70vh]">{content}</main>;
 }

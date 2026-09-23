@@ -11,5 +11,5 @@ import { CustomerFooter } from '../components/customer-footer';
 export const metadata: Metadata = { title: { default: 'Plate40', template: '%s | Plate40' }, description: 'Wholesome homestyle meals from verified kitchens.' };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><AppProviders><CustomerHeader />{children}<CustomerFooter /></AppProviders></body></html>;
+  return <html lang="en"><body className="bg-slate-50 text-p40-slate min-h-screen flex flex-col antialiased"><AppProviders><CustomerHeader /><main className="flex-1">{children}</main><CustomerFooter /></AppProviders></body></html>;
 }

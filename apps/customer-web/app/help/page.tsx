@@ -57,78 +57,78 @@ const quickLinks = [
 
 export default function HelpPage() {
   return (
-    <main className="page-shell p40-container">
+    <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader
         title="Help & Support"
         description="Find quick answers or get in touch with our support team."
       />
 
       {/* Quick Links */}
-      <section className="help-quick-links">
+      <section className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4 mb-10">
         {quickLinks.map(({ icon: Icon, label, href }) => (
-          <Link key={label} href={href} className="help-quick-card">
-            <span className="help-quick-icon">
+          <Link key={label} href={href} className="flex items-center gap-3 py-3 px-4 md:px-5 bg-white border-[1.5px] border-p40-border rounded-[14px] text-[0.92rem] font-semibold text-[#3d4152] transition-[border-color,box-shadow,transform] duration-200 hover:border-[#fc8019] hover:shadow-[0_4px_16px_rgba(252,128,25,0.12)] hover:-translate-y-0.5 hover:text-[#fc8019] no-underline">
+            <span className="w-10 h-10 grid place-items-center rounded-[10px] bg-[#fff3ea] text-[#fc8019] flex-none">
               <Icon size={22} />
             </span>
             <span>{label}</span>
-            <ChevronRight size={16} className="help-quick-arrow" />
+            <ChevronRight size={16} className="ml-auto text-slate-400 flex-none" />
           </Link>
         ))}
       </section>
 
       {/* FAQs */}
-      <section className="help-section">
-        <h2 className="help-section-title">
+      <section className="mb-10">
+        <h2 className="flex items-center gap-2.5 text-[1.2rem] font-[800] text-[#3d4152] mb-5 mt-0">
           <HelpCircle size={20} />
           Frequently Asked Questions
         </h2>
-        <div className="help-faq-list">
+        <div className="grid gap-3">
           {faqs.map((faq) => (
-            <details key={faq.question} className="help-faq-item">
-              <summary className="help-faq-question">{faq.question}</summary>
-              <p className="help-faq-answer">{faq.answer}</p>
+            <details key={faq.question} className="group bg-white border-[1.5px] border-p40-border rounded-xl overflow-hidden transition-colors duration-200 open:border-[#fc8019]">
+              <summary className="p-4 md:px-5 font-semibold text-[0.95rem] text-[#3d4152] cursor-pointer flex justify-between items-center gap-4 list-none [&::-webkit-details-marker]:hidden after:content-['+'] after:text-[1.3rem] after:text-[#fc8019] after:flex-none after:transition-transform after:duration-200 group-open:after:content-['−']">{faq.question}</summary>
+              <p className="px-4 md:px-5 pb-4 text-[#686b78] text-[0.9rem] leading-[1.6] m-0">{faq.answer}</p>
             </details>
           ))}
         </div>
       </section>
 
       {/* Contact */}
-      <section className="help-section">
-        <h2 className="help-section-title">
+      <section className="mb-10">
+        <h2 className="flex items-center gap-2.5 text-[1.2rem] font-[800] text-[#3d4152] mb-5 mt-0">
           <MessageCircle size={20} />
           Still need help?
         </h2>
-        <div className="help-contact-grid">
-          <div className="help-contact-card">
-            <span className="help-contact-icon">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
+          <div className="flex items-start gap-4 p-5 bg-white border-[1.5px] border-p40-border rounded-[14px]">
+            <span className="w-[46px] h-[46px] grid place-items-center rounded-xl bg-[#fff3ea] text-[#fc8019] flex-none">
               <PhoneCall size={24} />
             </span>
             <div>
-              <strong>Call Us</strong>
-              <p>Available Mon–Sat, 9 AM – 9 PM</p>
-              <a href="tel:+911800000040" className="help-contact-link">
+              <strong className="block text-[0.95rem] text-[#3d4152] mb-1">Call Us</strong>
+              <p className="text-[0.8rem] text-slate-400 m-0 mb-1.5">Available Mon–Sat, 9 AM – 9 PM</p>
+              <a href="tel:+911800000040" className="text-[0.85rem] font-bold text-[#fc8019] no-underline hover:underline">
                 1800-000-0040 (Toll-free)
               </a>
             </div>
           </div>
-          <div className="help-contact-card">
-            <span className="help-contact-icon">
+          <div className="flex items-start gap-4 p-5 bg-white border-[1.5px] border-p40-border rounded-[14px]">
+            <span className="w-[46px] h-[46px] grid place-items-center rounded-xl bg-[#fff3ea] text-[#fc8019] flex-none">
               <MessageCircle size={24} />
             </span>
             <div>
-              <strong>Chat with Us</strong>
-              <p>Get instant answers from our team</p>
-              <span className="help-contact-link">Chat coming soon</span>
+              <strong className="block text-[0.95rem] text-[#3d4152] mb-1">Chat with Us</strong>
+              <p className="text-[0.8rem] text-slate-400 m-0 mb-1.5">Get instant answers from our team</p>
+              <span className="text-[0.85rem] font-bold text-[#fc8019] no-underline hover:underline">Chat coming soon</span>
             </div>
           </div>
-          <div className="help-contact-card">
-            <span className="help-contact-icon">
+          <div className="flex items-start gap-4 p-5 bg-white border-[1.5px] border-p40-border rounded-[14px]">
+            <span className="w-[46px] h-[46px] grid place-items-center rounded-xl bg-[#fff3ea] text-[#fc8019] flex-none">
               <FileText size={24} />
             </span>
             <div>
-              <strong>Email Support</strong>
-              <p>We reply within 24 hours</p>
-              <a href="mailto:support@plate40.com" className="help-contact-link">
+              <strong className="block text-[0.95rem] text-[#3d4152] mb-1">Email Support</strong>
+              <p className="text-[0.8rem] text-slate-400 m-0 mb-1.5">We reply within 24 hours</p>
+              <a href="mailto:support@plate40.com" className="text-[0.85rem] font-bold text-[#fc8019] no-underline hover:underline">
                 support@plate40.com
               </a>
             </div>

@@ -46,36 +46,28 @@ export default function DashboardLoginPage() {
     savedUser?.role === UserRole.MERCHANT ||
     savedUser?.role === UserRole.DELIVERY_PARTNER
   )
-    return <main className="ops-placeholder">Restoring your session...</main>;
+    return <main className="p-12 text-center">Restoring your session...</main>;
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: 16,
-        background: 'linear-gradient(135deg,#273249,#4f46e5)',
-      }}
-    >
-      <Card className="form-card" style={{ padding: 28, width: 'min(440px,100%)' }}>
-        <span className="section-kicker">Plate40 operations</span>
-        <h1>Sign in to the console</h1>
-        <p>Admin and merchant access is verified by the backend role.</p>
-        <form className="form-grid" onSubmit={form.handleSubmit(submit)}>
-          <label className="p40-field">
-            <span className="p40-label">Email</span>
+    <main className="min-h-screen grid place-items-center p-4 bg-[linear-gradient(135deg,#273249,#4f46e5)]">
+      <Card className="grid gap-4 p-7 w-[min(440px,100%)]">
+        <span className="text-[#fc8019] text-xs font-extrabold tracking-[0.1em] uppercase block">Plate40 operations</span>
+        <h1 className="m-0 text-2xl font-bold">Sign in to the console</h1>
+        <p className="m-0 text-slate-500 text-sm">Admin and merchant access is verified by the backend role.</p>
+        <form className="grid gap-4" onSubmit={form.handleSubmit(submit)}>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Email</span>
             <Input type="email" {...form.register('email')} />
           </label>
-          <label className="p40-field">
-            <span className="p40-label">Password</span>
+          <label className="grid gap-1">
+            <span className="font-semibold text-sm text-[#06402b]">Password</span>
             <Input type="password" {...form.register('password')} />
           </label>
           <Button disabled={state.isLoading} type="submit">
             {state.isLoading ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
-        <p style={{ marginTop: 16 }}>
-          <Link href={ROUTES.delivery.register}>Register as a delivery partner</Link>
+        <p className="mt-4 text-center">
+          <Link href={ROUTES.delivery.register} className="text-[#fc8019] font-medium hover:underline">Register as a delivery partner</Link>
         </p>
       </Card>
     </main>

@@ -24,6 +24,7 @@
     "@plate40/utils": "*",
     "@plate40/validation": "*",
     "date-fns": "^4.1.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^0.553.0",
     "next": "^16.3.5",
     "react": "^19.3.0",

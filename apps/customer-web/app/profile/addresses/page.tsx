@@ -10,7 +10,6 @@ import {
   AddressAutocomplete,
   Button,
   Card,
-  EmptyState,
   ErrorState,
   Input,
   PageHeader,
@@ -81,7 +80,7 @@ export default function AddressesPage() {
     try {
       await deleteAddress(id).unwrap();
       toast.success('Address deleted');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete address');
     }
   }
@@ -147,37 +146,36 @@ export default function AddressesPage() {
   }
 
   return (
-    <main className="page-shell p40-container">
+    <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader
         title="Manage Addresses"
       />
-      <div className="address-page">
+      <div className="flex flex-col gap-8 w-full">
         {isLoading ? (
           <Skeleton />
         ) : isError ? (
           <ErrorState />
         ) : (
-          <section className="address-list">
+          <section className="grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6">
             <Card
-              className="address-card"
-              style={{ justifyContent: 'center', alignItems: 'center', cursor: 'pointer', borderStyle: 'dashed', minHeight: '200px' }}
+              className="p-6 bg-white border border-p40-border rounded-none flex flex-col items-center justify-center cursor-pointer border-dashed min-h-[200px]"
               onClick={() => {
                 handleCancelEdit();
                 setIsFormVisible(true);
               }}
             >
-              <Plus size={32} style={{ color: 'var(--p40-brand)', marginBottom: '0.5rem' }} />
-              <strong style={{ color: 'var(--p40-brand)' }}>ADD NEW ADDRESS</strong>
+              <Plus size={32} className="text-p40-brand mb-2" />
+              <strong className="text-p40-brand">ADD NEW ADDRESS</strong>
             </Card>
             {data.map((address) => {
               const Icon = address.label === AddressLabel.HOME ? Home : address.label === AddressLabel.WORK ? Briefcase : MapPin;
               return (
-                <Card key={address.id} className="address-card p40-card">
-                  <div className="address-card-header">
-                    <Icon size={24} className="address-card-icon" />
-                    <div className="address-card-content">
-                      <strong>{address.label}</strong>
-                      <p>
+                <Card key={address.id} className="p-6 bg-white border border-p40-border rounded-none flex flex-col">
+                  <div className="flex items-start gap-4">
+                    <Icon size={24} className="mt-[2px] text-[#3d4152]" />
+                    <div className="flex-1">
+                      <strong className="block text-[1.1rem] font-[800] text-[#1e293b] mb-2">{address.label}</strong>
+                      <p className="m-0 text-[#3d4152] text-[0.95rem] leading-[1.5]">
                         {address.addressLine1}
                         {address.addressLine2 ? `, ${address.addressLine2}` : ''}
                         <br />
@@ -185,9 +183,9 @@ export default function AddressesPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="address-card-actions">
-                    <button onClick={() => handleEdit(address)} type="button">EDIT</button>
-                    <button onClick={() => handleDelete(address.id)} type="button">DELETE</button>
+                  <div className="flex gap-6 mt-6 pl-10">
+                    <button onClick={() => handleEdit(address)} type="button" className="bg-none border-none text-[#fc8019] font-[800] text-[0.85rem] uppercase cursor-pointer p-0 tracking-[0.5px] hover:underline">EDIT</button>
+                    <button onClick={() => handleDelete(address.id)} type="button" className="bg-none border-none text-[#fc8019] font-[800] text-[0.85rem] uppercase cursor-pointer p-0 tracking-[0.5px] hover:underline">DELETE</button>
                   </div>
                 </Card>
               );
@@ -196,15 +194,15 @@ export default function AddressesPage() {
         )}
         
         {isFormVisible && (
-          <div className="address-slide-over-overlay" onClick={handleCancelEdit}>
-            <div className="address-slide-over" onClick={(e) => e.stopPropagation()}>
-              <div className="address-slide-over-header">
-                <h2>{editingId ? 'Edit address' : 'Add address'}</h2>
-                <button type="button" className="address-slide-over-close" onClick={handleCancelEdit}>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={handleCancelEdit}>
+            <div className="fixed top-0 right-0 bottom-0 w-full sm:max-w-[480px] bg-white z-50 p-5 md:p-8 shadow-[-4px_0_24px_rgba(0,0,0,0.1)] overflow-y-auto animate-[slideIn_0.3s_cubic-bezier(0.16,1,0.3,1)]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="m-0">{editingId ? 'Edit address' : 'Add address'}</h2>
+                <button type="button" className="bg-none border-none cursor-pointer p-2 text-p40-slate" onClick={handleCancelEdit}>
                   <X size={24} />
                 </button>
               </div>
-              <form className="form-grid" onSubmit={submit}>
+              <form className="grid gap-4" onSubmit={submit}>
                 <label className="p40-field">
                   <span className="p40-label">Label</span>
                   <select

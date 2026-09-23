@@ -124,12 +124,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="p40-page-header">
+    <header className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
       <div>
-        <h1>{title}</h1>
-        {description ? <p>{description}</p> : null}
+        <h1 className="text-xl sm:text-2xl font-bold text-[#06402b] m-0">{title}</h1>
+        {description ? <p className="text-slate-500 text-sm mt-1 mb-0">{description}</p> : null}
       </div>
-      {actions}
+      {actions && <div className="flex shrink-0">{actions}</div>}
     </header>
   );
 }
@@ -144,11 +144,11 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <Card className="p40-empty">
-      <Inbox size={28} aria-hidden />
-      <h3>{title}</h3>
-      <p>{description}</p>
-      {action}
+    <Card className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 shadow-none">
+      <div className="text-slate-400 mb-4"><Inbox size={32} aria-hidden /></div>
+      <h3 className="text-lg font-bold text-[#06402b] m-0">{title}</h3>
+      <p className="text-slate-500 text-sm mt-2 mb-4">{description}</p>
+      {action && <div>{action}</div>}
     </Card>
   );
 }
@@ -159,16 +159,16 @@ export function ErrorState({
   message?: string;
 }) {
   return (
-    <Card className="p40-empty" role="alert">
-      <AlertCircle size={28} color="#e11d48" aria-hidden />
-      <h3>Unable to load</h3>
-      <p>{message}</p>
+    <Card className="flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-red-50/30 rounded-2xl border border-dashed border-red-100 shadow-none" role="alert">
+      <div className="text-red-500 mb-4"><AlertCircle size={32} aria-hidden /></div>
+      <h3 className="text-lg font-bold text-red-700 m-0">Unable to load</h3>
+      <p className="text-red-600/80 text-sm mt-2 mb-0">{message}</p>
     </Card>
   );
 }
 
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-label="Loading" className={cn('p40-skeleton', className)} />;
+  return <div aria-label="Loading" className={cn('animate-pulse bg-slate-200/60 rounded-md', className)} />;
 }
 
 export function StatCard({
@@ -183,13 +183,13 @@ export function StatCard({
   icon?: ReactNode;
 }) {
   return (
-    <Card className="p40-stat">
-      <div className="p40-stat__top">
+    <Card className="p-6 flex flex-col gap-3 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.02)] rounded-2xl border border-slate-100/50">
+      <div className="flex justify-between items-center text-slate-500 font-medium text-sm">
         <span>{label}</span>
-        {icon}
+        <span className="text-slate-400">{icon}</span>
       </div>
-      <strong>{value}</strong>
-      {detail ? <small>{detail}</small> : null}
+      <strong className="text-3xl font-extrabold text-[#06402b]">{value}</strong>
+      {detail ? <small className="text-slate-500 text-sm mt-1">{detail}</small> : null}
     </Card>
   );
 }
