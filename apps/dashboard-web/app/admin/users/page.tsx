@@ -18,5 +18,5 @@ export default function AdminUsersPage() {
     { accessorKey: 'createdAt', header: 'Joined', cell: ({ row }) => row.original.createdAt ? formatDate(row.original.createdAt) : '—' },
     { id: 'actions', header: 'Actions', cell: ({ row }) => <Button disabled={state.isLoading} variant={row.original.status === UserStatus.BLOCKED ? 'secondary' : 'danger'} onClick={async () => { try { await update({ userId: row.original.id, action: row.original.status === UserStatus.BLOCKED ? ACTIONS.unblock : ACTIONS.block }).unwrap(); toast.success('User status updated'); } catch { toast.error('Unable to update the user.'); } }}>{row.original.status === UserStatus.BLOCKED ? 'Unblock' : 'Block'}</Button> },
   ];
-  return <main className="dashboard-page"><PageHeader title="Customers & users" description="Role and account status management." />{isLoading ? <Skeleton /> : isError ? <ErrorState /> : <Card className="table-card"><DataTable data={data} columns={columns} /></Card>}</main>;
+  return <main className="p-4 sm:p-6 max-w-[1600px] mx-auto"><PageHeader title="Customers & users" description="Role and account status management." />{isLoading ? <Skeleton /> : isError ? <ErrorState /> : <Card className="p-[1.15rem]"><DataTable data={data} columns={columns} /></Card>}</main>;
 }

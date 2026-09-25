@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useOrdersQuery } from '@plate40/state';
+import { OrderStatus, PaymentStatus, PaymentMethod } from '@plate40/types';
 import {
   EmptyState,
   ErrorState,
@@ -28,7 +29,18 @@ export default function OrdersPage() {
         <ErrorState message="Sign in to see your orders." />
       ) : data.length ? (
         <div className="grid gap-3.5">
-          {data.map((order) => (
+          {data.map((order) => {
+            let displayPaymentStatus = order.paymentStatus;
+            if (order.paymentStatus === PaymentStatus.PENDING) {
+              const isAcceptedOrBeyond = order.orderStatus !== OrderStatus.PENDING && order.orderStatus !== OrderStatus.REJECTED && order.orderStatus !== OrderStatus.CANCELLED;
+              if (order.paymentMethod === PaymentMethod.ONLINE && isAcceptedOrBeyond) {
+                displayPaymentStatus = PaymentStatus.PAID;
+              } else if (order.orderStatus === OrderStatus.DELIVERED) {
+                displayPaymentStatus = PaymentStatus.PAID;
+              }
+            }
+
+            return (
             <Link href={`/orders/${order.id}`} key={order.id} className="no-underline text-inherit block">
               <Card className="p-4 md:px-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-p40-1 transition-shadow duration-200">
                 <div className="flex-1">
@@ -39,13 +51,16 @@ export default function OrdersPage() {
                 <div className="flex justify-between items-center md:gap-5 mt-2 md:mt-0 pt-3 md:pt-0 border-t border-dashed border-slate-200 md:border-none">
                   <div className="flex gap-2 flex-wrap">
                     <OrderStatusBadge status={order.orderStatus} />
-                    <PaymentStatusBadge status={order.paymentStatus} />
+                    {order.orderStatus !== OrderStatus.CANCELLED && order.orderStatus !== OrderStatus.REJECTED && (
+                      <PaymentStatusBadge status={displayPaymentStatus} />
+                    )}
                   </div>
                   <Price value={order.totalAmount} className="text-lg md:text-base font-bold" />
                 </div>
               </Card>
             </Link>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <EmptyState

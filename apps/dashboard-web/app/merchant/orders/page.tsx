@@ -35,8 +35,8 @@ function KitchenOrderCard({
   const next = NEXT_ACTION[order.orderStatus];
   const delivered = order.orderStatus === OrderStatus.DELIVERED;
   return (
-    <Card className="kds-order">
-      <div className="kds-order__header">
+    <Card className="border-2 border-rose-300">
+      <div className="py-3 px-4 bg-rose-50 flex flex-wrap gap-2.5 items-center">
         <span className="order-code">#{order.orderNumber}</span>
         <Badge tone={delivered ? 'success' : 'danger'}>
           {delivered ? <PackageCheck size={13} /> : <Clock3 size={13} />}
@@ -44,28 +44,29 @@ function KitchenOrderCard({
         </Badge>
         <OrderStatusBadge status={order.orderStatus} />
       </div>
-      <div className="kds-order__body">
-        <div className="kds-order__customer">
+      <div className="p-4">
+        <div className="flex justify-between items-center border-b border-gray-200 pb-3">
           <div>
             <h3>Order {order.orderNumber}</h3>
             <small>Restaurant #{order.restaurantId}</small>
           </div>
           <div>
             <small>Order total</small>
-            <strong style={{ display: 'block', fontSize: 22 }}>
+            <strong className="block text-[22px]">
               <Price value={order.totalAmount} />
             </strong>
           </div>
         </div>
-        <ul className="kds-order__items">
-          <li>Canonical order details are available from the order API.</li>
+        <ul className="list-none p-0 grid gap-2">
+          <li className="p-3 rounded-lg bg-indigo-50 font-bold">Canonical order details are available from the order API.</li>
         </ul>
       </div>
       {next ? (
-        <div className="kds-order__actions">
+        <div className="flex gap-2.5 px-4 pb-4">
           {order.orderStatus === OrderStatus.PENDING ? (
             <Button
               variant="danger"
+              className="flex-1"
               disabled={busy}
               onClick={() => onAction(order, ACTIONS.reject)}
             >
@@ -74,6 +75,7 @@ function KitchenOrderCard({
           ) : null}
           <Button
             variant="operational"
+            className="flex-1"
             disabled={busy}
             onClick={() => onAction(order, next.action)}
           >
@@ -116,7 +118,7 @@ export default function MerchantOrdersPage() {
   );
   const completed = data.filter((order) => order.orderStatus === OrderStatus.DELIVERED);
   return (
-    <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
       <PageHeader
         title="Kitchen queue & dispatches"
         description="Auto-refreshing every 15 seconds with backend-authoritative order state."
@@ -126,8 +128,8 @@ export default function MerchantOrdersPage() {
           </Badge>
         }
       />
-      <div className="kds-toolbar">
-        <div className="kds-toolbar__tabs">
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex gap-2 overflow-auto whitespace-nowrap *:px-4 *:py-[0.7rem] *:rounded-lg *:bg-indigo-50 *:font-bold first:*:bg-orange-500 first:*:text-white">
           <span>Active orders {active.length}</span>
           <span>
             Preparing {active.filter((order) => order.orderStatus === OrderStatus.PREPARING).length}
@@ -145,8 +147,8 @@ export default function MerchantOrdersPage() {
       ) : (
         <>
           {active.length ? (
-            <div className="kds-layout">
-              <section className="kds-queue">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_330px] gap-4">
+              <section className="grid gap-[0.9rem]">
                 {active.map((order) => (
                   <KitchenOrderCard
                     key={order.id}
@@ -156,8 +158,8 @@ export default function MerchantOrdersPage() {
                   />
                 ))}
               </section>
-              <Card className="panel-card">
-                <span className="section-kicker">Quick stock control</span>
+              <Card className="p-[1.15rem]">
+                <span className="text-orange-500 text-[0.68rem] font-[850] uppercase tracking-[0.11em]">Quick stock control</span>
                 <h2>Menu availability</h2>
                 <p>Open Menu & Stock to update live availability.</p>
                 <a className="p40-button p40-button--secondary" href="/merchant/menu">
@@ -172,9 +174,9 @@ export default function MerchantOrdersPage() {
             />
           )}
           {completed.length ? (
-            <section style={{ marginTop: 24 }}>
+            <section className="mt-6">
               <h2>Completed orders</h2>
-              <div className="kds-queue">
+              <div className="grid gap-[0.9rem]">
                 {completed.slice(0, 5).map((order) => (
                   <KitchenOrderCard
                     key={order.id}

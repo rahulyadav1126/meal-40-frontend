@@ -363,7 +363,7 @@ export function CustomerHeader() {
                         onAddressSelect={setSelectedAddress}
                       />
                     </label>
-                    <Button type="submit" disabled={!selectedAddress && !manualLocation.trim()} variant="primary" style={{ marginTop: '0.75rem', width: '100%' }}>
+                    <Button type="submit" disabled={!selectedAddress && !manualLocation.trim()} variant="primary" className="mt-3 w-full">
                       Confirm Location
                     </Button>
                   </form>

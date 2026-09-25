@@ -6,24 +6,43 @@ import { RestaurantOpeningStatus, type Restaurant } from '@plate40/types';
 export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
   const open = restaurant.openingStatus === RestaurantOpeningStatus.OPEN;
   return (
-    <Link href={`/restaurants/${restaurant.id}`}>
-      <Card className="overflow-hidden transition-[transform,box-shadow] duration-200 hover:-translate-y-[3px] hover:shadow-p40-2">
+    <Link href={`/restaurants/${restaurant.id}`} className="group block h-full">
+      <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] border-slate-100/80 bg-white">
         <div
-          className="min-h-[155px] bg-[linear-gradient(135deg,#ffe4e6,#ffedd5)] grid place-items-center text-p40-primary font-[800] text-[1.5rem] font-heading"
-          style={restaurant.coverImageUrl ? { backgroundImage: `linear-gradient(0deg,rgb(15 23 42 / 35%),transparent),url(${restaurant.coverImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+          className="min-h-[170px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-50 via-rose-50 to-amber-50 grid place-items-center relative overflow-hidden"
+          style={restaurant.coverImageUrl ? { backgroundImage: `linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.8)), url(${restaurant.coverImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
         >
-          {restaurant.coverImageUrl ? null : restaurant.name.slice(0, 1)}
-        </div>
-        <div className="p-4">
-          <div className="flex justify-between gap-2">
-            <h3 className="m-0">{restaurant.name}</h3>
-            <Badge tone={open ? 'success' : 'danger'}>{open ? 'Open' : 'Closed'}</Badge>
+          {restaurant.coverImageUrl ? null : (
+            <div className="absolute inset-0 flex items-center justify-center opacity-60">
+              <span className="text-[5rem] font-bold text-orange-200/50 font-serif leading-none mix-blend-multiply group-hover:scale-110 transition-transform duration-500">{restaurant.name.slice(0, 1)}</span>
+            </div>
+          )}
+          
+          <div className="absolute top-3 right-3 z-10">
+            <span className={`px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider rounded-full backdrop-blur-md shadow-sm ${open ? 'bg-emerald-50/90 text-emerald-700 ring-1 ring-emerald-600/20' : 'bg-white/90 text-rose-600 ring-1 ring-rose-600/20'}`}>
+              {open ? 'Open' : 'Closed'}
+            </span>
           </div>
-          <p className="text-p40-muted min-h-[2.5rem] mt-2 mb-2">{restaurant.description || 'Wholesome neighborhood meals prepared fresh.'}</p>
-          <div className="flex justify-between gap-2 text-[0.78rem]">
-            <span className="inline-flex gap-1 items-center"><Star size={13} fill="#f59e0b" color="#f59e0b" /> {Number(restaurant.averageRating || 0).toFixed(1)}</span>
-            <span className="inline-flex gap-1 items-center"><Clock3 size={13} /> 20-25 min</span>
-            <span className="inline-flex gap-1 items-center"><MapPin size={13} /> {restaurant.city}</span>
+        </div>
+        <div className="p-5 flex flex-col flex-1">
+          <h3 className="m-0 text-lg font-bold text-slate-800 leading-tight group-hover:text-[#fc8019] transition-colors">{restaurant.name}</h3>
+          <p className="text-slate-500 text-[0.85rem] mt-2 mb-4 flex-1 line-clamp-2 leading-relaxed">
+            {restaurant.description || 'Wholesome neighborhood meals prepared fresh everyday.'}
+          </p>
+          
+          <div className="flex justify-between items-center bg-slate-50/80 p-2.5 rounded-xl border border-slate-100/50 text-[0.75rem] font-medium text-slate-600">
+            <span className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-md shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]">
+              <Star size={14} fill="#f59e0b" color="#f59e0b" />
+              <span className="text-slate-700 font-bold">{Number(restaurant.averageRating || 0).toFixed(1)}</span>
+            </span>
+            <span className="flex items-center gap-1.5 opacity-80">
+              <Clock3 size={14} className="text-slate-400" /> 
+              20-25 min
+            </span>
+            <span className="flex items-center gap-1.5 opacity-80 truncate max-w-[90px]">
+              <MapPin size={14} className="text-slate-400 shrink-0" /> 
+              <span className="truncate">{restaurant.city}</span>
+            </span>
           </div>
         </div>
       </Card>

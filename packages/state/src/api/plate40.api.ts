@@ -14,6 +14,8 @@ import type {
   Order,
   PaginatedResult,
   Restaurant,
+  Review,
+  CreateReviewDto,
   User,
 } from '@plate40/types';
 import { baseApi } from './base-api';
@@ -387,6 +389,31 @@ export const plate40Api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['AdminDelivery'],
     }),
+    createReview: builder.mutation<Review, CreateReviewDto>({
+      query: (data) => ({ url: 'http://localhost:3001/api/mock/reviews', method: 'POST', data }),
+      async onQueryStarted({ restaurantId, rating }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          plate40Api.util.updateQueryData('restaurants', undefined, (draft) => {
+            const restaurant = draft.items.find((r) => r.id === restaurantId);
+            if (restaurant) {
+              const currentRating = Number(restaurant.averageRating) || 0;
+              restaurant.averageRating = currentRating === 0 ? rating.toFixed(1) : ((currentRating + rating) / 2).toFixed(1);
+            }
+          })
+        );
+
+        try {
+          await queryFulfilled;
+          dispatch(plate40Api.util.invalidateTags(['MerchantOrders']));
+        } catch {
+          patchResult.undo();
+        }
+      },
+    }),
+    merchantReviews: builder.query<Review[], void>({
+      query: () => ({ url: 'http://localhost:3001/api/mock/reviews' }),
+      providesTags: ['MerchantOrders'],
+    }),
   }),
 });
 
@@ -438,4 +465,6 @@ export const {
   useAdminDeliveryPartnersQuery,
   useAdminDeliveriesQuery,
   useAdminDeliveryActionMutation,
+  useCreateReviewMutation,
+  useMerchantReviewsQuery,
 } = plate40Api;

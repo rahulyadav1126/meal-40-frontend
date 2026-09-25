@@ -16,4 +16,4 @@ const columns: Array<ColumnDef<Order>> = [
   { accessorKey: 'createdAt', header: 'Date', cell: ({ row }) => formatDate(row.original.createdAt) },
 ];
 
-export default function AdminOrdersPage() { const { data = [], isLoading, isError } = useAdminOrdersQuery(); return <main className="dashboard-page"><PageHeader title="Platform orders" description="Searchable operational order ledger." />{isLoading ? <Skeleton /> : isError ? <ErrorState /> : <Card className="table-card"><DataTable data={data} columns={columns} emptyMessage="No orders found." /></Card>}</main>; }
+export default function AdminOrdersPage() { const { data = [], isLoading, isError } = useAdminOrdersQuery(); return <main className="p-4 sm:p-6 max-w-[1600px] mx-auto"><PageHeader title="Platform orders" description="Searchable operational order ledger." />{isLoading ? <Skeleton /> : isError ? <ErrorState /> : <Card className="p-[1.15rem]"><DataTable data={data} columns={columns} emptyMessage="No orders found." /></Card>}</main>; }

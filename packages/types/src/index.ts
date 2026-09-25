@@ -290,3 +290,21 @@ export interface PaginatedResult<T> {
   items: T[];
   meta: PaginationMeta;
 }
+
+export interface Review {
+  id: number;
+  restaurantId: number;
+  customerId: number;
+  orderId: number;
+  rating: number;
+  comment?: string | null;
+  customer?: Pick<User, 'id' | 'name' | 'email'>;
+  createdAt: string;
+}
+
+export interface CreateReviewDto {
+  orderId: number;
+  restaurantId: number;
+  rating: number;
+  comment?: string;
+}

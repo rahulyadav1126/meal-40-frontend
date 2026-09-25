@@ -30,7 +30,7 @@ export default function AdminDeliveryPage() {
     } catch (error) {
       toast.error(
         (error as { data?: { message?: string } })?.data?.message ??
-          'Unable to update this delivery partner.',
+        'Unable to update this delivery partner.',
       );
     }
   }
@@ -42,7 +42,7 @@ export default function AdminDeliveryPage() {
       cell: ({ row }) => (
         <div>
           <strong>{row.original.user.name}</strong>
-          <small style={{ display: 'block' }}>{row.original.user.phone}</small>
+          <small className="block">{row.original.user.phone}</small>
           <small>{row.original.user.email}</small>
         </div>
       ),
@@ -53,7 +53,7 @@ export default function AdminDeliveryPage() {
       cell: ({ row }) => (
         <div>
           <strong>{row.original.vehicleNumber}</strong>
-          <small style={{ display: 'block' }}>{row.original.vehicleType}</small>
+          <small className="block">{row.original.vehicleType}</small>
         </div>
       ),
     },
@@ -61,12 +61,12 @@ export default function AdminDeliveryPage() {
       id: 'documents',
       header: 'Documents',
       cell: ({ row }) => (
-        <div style={{ display: 'grid', gap: 8 }}>
+        <div className="grid gap-2">
           {row.original.documents?.length ? (
             row.original.documents.map((document) => (
               <div key={document.id}>
                 <strong>{document.type}</strong>
-                <small style={{ display: 'block' }}>{document.documentNumber}</small>
+                <small className="block">{document.documentNumber}</small>
                 <Badge
                   tone={
                     document.status === 'VERIFIED'
@@ -78,7 +78,7 @@ export default function AdminDeliveryPage() {
                 >
                   {document.status}
                 </Badge>
-                <div className="table-actions" style={{ marginTop: 6 }}>
+                <div className="table-actions mt-1.5">
                   <Button
                     variant="operational"
                     disabled={state.isLoading || document.status === 'VERIFIED'}
@@ -169,7 +169,7 @@ export default function AdminDeliveryPage() {
   ];
 
   return (
-    <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
       <PageHeader
         title="Delivery partners & approvals"
         description="Review documents and approve, reject, or suspend delivery partners."
@@ -179,7 +179,7 @@ export default function AdminDeliveryPage() {
       ) : partners.isError ? (
         <ErrorState />
       ) : (
-        <Card className="table-card">
+        <Card className="p-[1.15rem]">
           <DataTable
             data={partners.data ?? []}
             columns={columns}
@@ -189,7 +189,7 @@ export default function AdminDeliveryPage() {
       )}
       <h2 style={{ marginTop: 28 }}>Current delivery monitoring</h2>
       {deliveries.data?.length ? (
-        <div className="delivery-grid">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {deliveries.data.slice(0, 20).map((delivery) => (
             <Card key={delivery.id}>
               <strong>#{delivery.order?.orderNumber}</strong>

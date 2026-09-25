@@ -13,19 +13,19 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
   if (isLoading)
     return (
-      <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
         <Skeleton />
       </main>
     );
   if (isError)
     return (
-      <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
         <ErrorState />
       </main>
     );
   const restaurant = data[0];
   return (
-    <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
         <PageHeader
           title="Store settings"

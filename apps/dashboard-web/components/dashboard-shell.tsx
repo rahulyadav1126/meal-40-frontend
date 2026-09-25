@@ -81,7 +81,7 @@ export function DashboardShell({
     <div className="min-h-screen">
       {/* Mobile overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-30 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -115,9 +115,8 @@ export function DashboardShell({
                 href={href}
                 onClick={() => setIsSidebarOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`min-h-[44px] flex gap-[0.75rem] items-center px-[0.8rem] py-[0.7rem] rounded-lg font-semibold text-[0.88rem] transition-all duration-200 ${
-                  isActive ? 'bg-[#fc8019] text-white' : 'text-[#06402b] hover:bg-[#fc8019] hover:text-white'
-                }`}
+                className={`min-h-[44px] flex gap-[0.75rem] items-center px-[0.8rem] py-[0.7rem] rounded-lg font-semibold text-[0.88rem] transition-all duration-200 ${isActive ? 'bg-[#fc8019] text-white' : 'text-[#06402b] hover:bg-[#fc8019] hover:text-white'
+                  }`}
               >
                 <Icon size={19} />
                 {label}
@@ -148,20 +147,20 @@ export function DashboardShell({
             </button>
             <div>
               <h1 className="m-0 text-[1rem] sm:text-[1.15rem] font-bold line-clamp-1">
-              {role === UserRole.ADMIN
-                ? 'Platform Administration Console'
-                : role === UserRole.MERCHANT
-                  ? 'KDS Live Dispatch'
-                  : 'Delivery Partner Console'}
-            </h1>
-            <p className="mt-[0.15rem] mb-0 text-slate-500 text-[0.7rem] sm:text-[0.78rem] hidden sm:block">
-              {role === UserRole.ADMIN
-                ? 'Ecosystem telemetry and partner operations'
-                : role === UserRole.MERCHANT
-                  ? 'Real-time incoming orders and kitchen prep line'
-                  : 'Pickup, delivery and earnings workspace'}
-            </p>
-          </div>
+                {role === UserRole.ADMIN
+                  ? 'Platform Administration Console'
+                  : role === UserRole.MERCHANT
+                    ? 'KDS Live Dispatch'
+                    : 'Delivery Partner Console'}
+              </h1>
+              <p className="mt-[0.15rem] mb-0 text-slate-500 text-[0.7rem] sm:text-[0.78rem] hidden sm:block">
+                {role === UserRole.ADMIN
+                  ? 'Ecosystem telemetry and partner operations'
+                  : role === UserRole.MERCHANT
+                    ? 'Real-time incoming orders and kitchen prep line'
+                    : 'Pickup, delivery and earnings workspace'}
+              </p>
+            </div>
           </div>
           <div className="flex gap-[0.55rem] items-center text-[0.82rem] shrink-0">
             <Bell size={20} className="hidden sm:block" />

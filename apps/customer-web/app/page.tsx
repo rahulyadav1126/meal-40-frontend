@@ -157,32 +157,35 @@ export default function HomePage() {
           </Card>
         ))}
       </section>
-      <section className="p40-container py-8 pb-12">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-          <div>
-            <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Hyperlocal kitchens</span>
-            <h2 className="text-[clamp(1.6rem,3vw,2.2rem)] my-1.5">Popular near you</h2>
-            <p className="m-0 text-p40-muted">Top-rated neighborhood kitchens serving fresh, budget-friendly meals.</p>
+      <section className="bg-slate-50/40 py-16 sm:py-20 border-t border-slate-100">
+        <div className="p40-container">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-5 mb-10">
+            <div className="max-w-xl">
+              <span className="text-[#fc8019] text-[0.75rem] font-[800] tracking-widest uppercase mb-2 block">Hyperlocal kitchens</span>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-slate-800 mb-3 tracking-tight">Popular near you</h2>
+              <p className="m-0 text-slate-500 text-base md:text-lg leading-relaxed">Top-rated neighborhood kitchens serving fresh, budget-friendly meals delivered hot to your door.</p>
+            </div>
+            <Link href={ROUTES.customer.restaurants} className="group inline-flex gap-2 items-center font-bold text-[0.9rem] text-[#fc8019] shrink-0 bg-orange-50/50 px-4 py-2 rounded-full hover:bg-orange-100 transition-colors">
+              View all restaurants <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-          <Link href={ROUTES.customer.restaurants} className="text-p40-primary inline-flex gap-1.5 items-center font-bold text-[0.85rem] shrink-0">
-            View all restaurants <ArrowRight size={16} />
-          </Link>
+          
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="h-[340px] rounded-2xl bg-slate-200/50 animate-pulse" />
+              ))}
+            </div>
+          ) : isError ? (
+            <ErrorState />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {data?.items.map((restaurant) => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
+            </div>
+          )}
         </div>
-        {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={index} />
-            ))}
-          </div>
-        ) : isError ? (
-          <ErrorState />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {data?.items.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-            ))}
-          </div>
-        )}
       </section>
       <section className="relative py-24 text-center bg-[#fdfaf5] promise-section overflow-hidden border-t border-slate-100">
         {/* Subtle Background Watermarks */}

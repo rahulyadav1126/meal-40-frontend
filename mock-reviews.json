@@ -1,0 +1,51 @@
+[
+  {
+    "id": 874259,
+    "createdAt": "2026-09-24T10:15:55.217Z",
+    "customer": {
+      "id": 1,
+      "name": "You",
+      "email": "you@example.com"
+    },
+    "orderId": 10,
+    "restaurantId": 1,
+    "rating": 5
+  },
+  {
+    "id": 618320,
+    "createdAt": "2026-09-24T10:01:19.234Z",
+    "customer": {
+      "id": 1,
+      "name": "You",
+      "email": "you@example.com"
+    },
+    "orderId": 10,
+    "restaurantId": 1,
+    "rating": 5,
+    "comment": "hello"
+  },
+  {
+    "id": 352661,
+    "createdAt": "2026-09-24T05:14:07.990Z",
+    "customer": {
+      "id": 1,
+      "name": "You",
+      "email": "you@example.com"
+    },
+    "orderId": 9,
+    "restaurantId": 1,
+    "rating": 4
+  },
+  {
+    "id": 231472,
+    "createdAt": "2026-09-24T05:13:25.508Z",
+    "customer": {
+      "id": 1,
+      "name": "You",
+      "email": "you@example.com"
+    },
+    "orderId": 11,
+    "restaurantId": 1,
+    "rating": 3
+  }
+]

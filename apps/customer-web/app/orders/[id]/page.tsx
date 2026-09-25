@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { AlertCircle, Check, Circle, XCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_URLS, STORAGE_KEYS } from '@plate40/config';
 import { baseApi, useAppDispatch, useOrderQuery } from '@plate40/state';
-import { OrderStatus } from '@plate40/types';
+import { OrderStatus, PaymentStatus, PaymentMethod } from '@plate40/types';
 import {
   Card,
   ErrorState,
@@ -17,6 +17,7 @@ import {
   Skeleton,
 } from '@plate40/ui';
 import { humanize } from '@plate40/utils';
+import { ReviewDialog } from './review-dialog';
 
 // ── Happy-path flow (for timeline) ───────────────────────────────────────────
 const ORDER_FLOW = [
@@ -37,6 +38,8 @@ export default function OrderDetailPage() {
   const id = useParams<{ id: string }>().id;
   const dispatch = useAppDispatch();
   const { data: order, isLoading, isError } = useOrderQuery(id);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   // ── Real-time updates via Socket.IO ──────────────────────────────────────
   useEffect(() => {
@@ -79,6 +82,17 @@ export default function OrderDetailPage() {
   const isRejected = order.orderStatus === OrderStatus.REJECTED;
   const current = ORDER_FLOW.indexOf(order.orderStatus as (typeof ORDER_FLOW)[number]);
 
+  let displayPaymentStatus = order.paymentStatus;
+  if (order.paymentStatus === PaymentStatus.PENDING) {
+    if (order.paymentMethod === PaymentMethod.ONLINE && current >= ORDER_FLOW.indexOf(OrderStatus.ACCEPTED)) {
+      displayPaymentStatus = PaymentStatus.PAID;
+    } else if (order.orderStatus === OrderStatus.DELIVERED) {
+      displayPaymentStatus = PaymentStatus.PAID;
+    } else if (isCancelled || isRejected) {
+      displayPaymentStatus = order.paymentMethod === PaymentMethod.ONLINE ? PaymentStatus.REFUNDED : PaymentStatus.FAILED;
+    }
+  }
+
   return (
     <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader
@@ -94,22 +108,16 @@ export default function OrderDetailPage() {
           <h2 className="mt-2 mb-5">{order.restaurant?.name ?? 'Your Plate40 kitchen'}</h2>
 
           {order.delivery?.deliveryPartner ? (
-            <div style={{ marginTop: 16, padding: 16, borderRadius: 12, background: '#eef2ff' }}>
+            <div className="mt-4 p-4 rounded-xl bg-indigo-50">
               {order.delivery.deliveryPartner.profilePhotoUrl ? (
                 <div
                   aria-label="Delivery partner photo"
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    backgroundImage: `url(${order.delivery.deliveryPartner.profilePhotoUrl})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
+                  className="w-14 h-14 rounded-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${order.delivery.deliveryPartner.profilePhotoUrl})` }}
                 />
               ) : null}
               <strong>Your delivery partner: {order.delivery.deliveryPartner.name}</strong>
-              <p style={{ margin: '6px 0' }}>
+              <p className="my-1.5">
                 {order.delivery.deliveryPartner.vehicleType} ·{' '}
                 {order.delivery.deliveryPartner.vehicleNumber}
               </p>
@@ -119,40 +127,27 @@ export default function OrderDetailPage() {
             </div>
           ) : null}
           {order.deliveryOtp ? (
-            <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: '#fff7ed' }}>
+            <div className="mt-3 p-4 rounded-xl bg-orange-50">
               <strong>Delivery OTP: {order.deliveryOtp}</strong>
-              <p style={{ margin: '6px 0 0' }}>Share this only after you receive the order.</p>
+              <p className="mt-1.5 mb-0">Share this only after you receive the order.</p>
             </div>
           ) : null}
 
           {isCancelled ? (
             /* ── Cancellation / Rejection banner ──────────────────────────── */
             <div
-              style={{
-                marginTop: '1.25rem',
-                padding: '1.5rem',
-                borderRadius: '12px',
-                background: isRejected
-                  ? 'linear-gradient(135deg,#fff1f2,#ffe4e6)'
-                  : 'linear-gradient(135deg,#fafafa,#f3f4f6)',
-                border: `2px solid ${isRejected ? '#fecdd3' : '#e5e7eb'}`,
-                display: 'flex',
-                flexDirection: 'column' as const,
-                gap: '0.75rem',
-              }}
+              className={`mt-5 p-6 rounded-xl flex flex-col gap-3 border-2 ${
+                isRejected
+                  ? 'bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200'
+                  : 'bg-gradient-to-br from-neutral-50 to-gray-100 border-gray-200'
+              }`}
             >
               {/* Icon + headline */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="flex items-center gap-3">
                 <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    background: isRejected ? '#fee2e2' : '#f3f4f6',
-                    display: 'grid',
-                    placeItems: 'center',
-                    flexShrink: 0,
-                  }}
+                  className={`w-12 h-12 rounded-full grid place-items-center shrink-0 ${
+                    isRejected ? 'bg-red-100' : 'bg-gray-100'
+                  }`}
                 >
                   {isRejected ? (
                     <XCircle size={26} color="#e11d48" />
@@ -161,10 +156,10 @@ export default function OrderDetailPage() {
                   )}
                 </div>
                 <div>
-                  <strong style={{ fontSize: '1.05rem', color: '#111827' }}>
+                  <strong className="text-[1.05rem] text-gray-900">
                     {isRejected ? 'Order Rejected by Restaurant' : 'Order Cancelled'}
                   </strong>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.85rem', color: '#6b7280' }}>
+                  <p className="mt-0.5 mb-0 text-[0.85rem] text-gray-500">
                     {isRejected
                       ? 'The restaurant was unable to accept your order at this time.'
                       : 'This order has been cancelled.'}
@@ -173,18 +168,8 @@ export default function OrderDetailPage() {
               </div>
 
               {/* What happens next */}
-              <div
-                style={{
-                  background: '#fff',
-                  borderRadius: 8,
-                  padding: '0.9rem 1rem',
-                  fontSize: '0.82rem',
-                  color: '#374151',
-                  lineHeight: 1.6,
-                  border: '1px solid #f3f4f6',
-                }}
-              >
-                <strong style={{ display: 'block', marginBottom: 4, color: '#111827' }}>
+              <div className="bg-white rounded-lg px-4 py-[0.9rem] text-[0.82rem] text-gray-700 leading-relaxed border border-gray-100">
+                <strong className="block mb-1 text-gray-900">
                   What happens next?
                 </strong>
                 {isRejected ? (
@@ -206,20 +191,7 @@ export default function OrderDetailPage() {
               {/* CTA */}
               <a
                 href="/restaurants"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.65rem 1.5rem',
-                  borderRadius: '8px',
-                  background: '#e11d48',
-                  color: '#fff',
-                  fontWeight: 700,
-                  fontSize: '0.88rem',
-                  textDecoration: 'none',
-                  width: 'fit-content',
-                }}
+                className="inline-flex items-center justify-center gap-1.5 py-[0.65rem] px-6 rounded-lg bg-rose-600 text-white font-bold text-[0.88rem] no-underline w-fit"
               >
                 Browse restaurants →
               </a>
@@ -265,7 +237,7 @@ export default function OrderDetailPage() {
 
           <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Payment</span>
-            <PaymentStatusBadge status={order.paymentStatus} />
+            <PaymentStatusBadge status={displayPaymentStatus} />
           </div>
           <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Method</span>
@@ -291,8 +263,29 @@ export default function OrderDetailPage() {
             <span>Total</span>
             <Price value={order.totalAmount} />
           </div>
+
+          {order.orderStatus === OrderStatus.DELIVERED && !hasReviewed && (
+            <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-3">
+              <span className="text-sm font-semibold text-slate-700">How was your meal?</span>
+              <button 
+                onClick={() => setReviewOpen(true)}
+                className="w-full bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200 py-2.5 rounded-xl font-bold transition-colors shadow-sm cursor-pointer"
+              >
+                Rate your meal
+              </button>
+            </div>
+          )}
         </Card>
       </div>
+
+      <ReviewDialog 
+        orderId={order.id}
+        restaurantId={order.restaurantId}
+        restaurantName={order.restaurant?.name ?? 'Plate40'}
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        onSuccess={() => setHasReviewed(true)}
+      />
     </main>
   );
 }

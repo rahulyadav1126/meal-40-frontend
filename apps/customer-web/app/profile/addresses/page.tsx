@@ -274,7 +274,7 @@ export default function AddressesPage() {
                     onChange={(event) => setDraft({ ...draft, landmark: event.target.value })}
                   />
                 </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="grid grid-cols-2 gap-4">
                   <label className="p40-field">
                     <span className="p40-label">City</span>
                     <Input
@@ -309,8 +309,8 @@ export default function AddressesPage() {
                     onChange={(event) => setDraft({ ...draft, postalCode: event.target.value })}
                   />
                 </label>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                  <Button disabled={createState.isLoading || updateState.isLoading} type="submit" style={{ flex: 1 }}>
+                <div className="flex gap-4 mt-4">
+                  <Button disabled={createState.isLoading || updateState.isLoading} type="submit" className="flex-1">
                     {editingId 
                       ? (updateState.isLoading ? 'Updating...' : 'Update address')
                       : (createState.isLoading ? 'Saving...' : 'Save address')

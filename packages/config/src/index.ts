@@ -26,6 +26,7 @@ export const API_PATHS = {
   addresses: '/addresses',
   notifications: '/notifications',
   profile: '/users/me',
+  reviews: '/reviews',
   locations: {
     autocomplete: '/locations/autocomplete',
     details: (placeId: string) => `/locations/details/${encodeURIComponent(placeId)}`,
@@ -37,6 +38,7 @@ export const API_PATHS = {
     menuImage: '/merchant/menu/image',
     menuItem: (itemId: number) => `/merchant/menu/${itemId}`,
     orderAction: (orderId: number, action: string) => `/merchant/orders/${orderId}/${action}`,
+    reviews: '/merchant/reviews',
   },
   delivery: {
     profile: '/delivery/profile',

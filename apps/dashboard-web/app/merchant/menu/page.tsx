@@ -188,7 +188,7 @@ export default function MerchantMenuPage() {
   };
 
   return (
-    <main className="dashboard-page merchant-menu-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto pb-16">
       <PageHeader
         title="Menu & stock"
         description="Build your catalogue and control what customers can order in real time."

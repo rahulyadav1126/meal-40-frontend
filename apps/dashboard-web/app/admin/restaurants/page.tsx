@@ -102,7 +102,7 @@ export default function AdminRestaurantsPage() {
     },
   ];
   return (
-    <main className="dashboard-page">
+    <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
       <PageHeader
         title="Restaurants & approvals"
         description="Review, approve, reject, or suspend partner kitchens."
@@ -112,7 +112,7 @@ export default function AdminRestaurantsPage() {
       ) : isError ? (
         <ErrorState />
       ) : (
-        <Card className="table-card">
+        <Card className="p-[1.15rem]">
           <DataTable
             data={data}
             columns={columns}
