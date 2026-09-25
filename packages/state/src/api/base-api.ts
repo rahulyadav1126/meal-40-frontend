@@ -13,9 +13,9 @@ export interface QueryError {
 const axiosBaseQuery: BaseQueryFn<ApiQueryArgs, unknown, QueryError> = async ({
   client = 'main',
   ...config
-}) => {
+}, api) => {
   try {
-    return { data: await apiRequest(client, config) };
+    return { data: await apiRequest(client, { ...config, signal: api.signal }) };
   } catch (error) {
     const normalized =
       error instanceof Plate40ApiError
@@ -31,6 +31,7 @@ const axiosBaseQuery: BaseQueryFn<ApiQueryArgs, unknown, QueryError> = async ({
 };
 
 export const TAG_TYPES = [
+  'Offers',
   'Restaurants',
   'Menu',
   'Cart',

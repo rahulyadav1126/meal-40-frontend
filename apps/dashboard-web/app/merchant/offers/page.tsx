@@ -1,0 +1,55 @@
+'use client';
+import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { useMerchantOffersQuery, useMerchantRestaurantsQuery, useMerchantMenuQuery, useCreateMerchantOfferMutation, useUpdateMerchantOfferMutation } from '@plate40/state';
+import type { MerchantOffer, OfferInput } from '@plate40/types';
+import { Button, Card, EmptyState, ErrorState, PageHeader, Price, Skeleton } from '@plate40/ui';
+
+function localTime(value: string) { const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+const initial = () => ({ restaurantId: '', code: '', description: '', discountType: 'PERCENTAGE' as 'PERCENTAGE' | 'FIXED', discountValue: '10', minimumOrderAmount: '0', maximumDiscount: '', startAt: localTime(new Date().toISOString()), expiresAt: localTime(new Date(Date.now() + 7 * 86400000).toISOString()), totalUsageLimit: '', perUserUsageLimit: '1', isActive: false, stackWithDishDiscount: false, menuItemIds: [] as number[] });
+export default function MerchantOffersPage() {
+  const offers = useMerchantOffersQuery();
+  const stores = useMerchantRestaurantsQuery();
+  const menu = useMerchantMenuQuery();
+  const [create, creating] = useCreateMerchantOfferMutation();
+  const [update, updating] = useUpdateMerchantOfferMutation();
+  const [editing, setEditing] = useState<MerchantOffer | null>(null);
+  const [form, setForm] = useState(initial);
+  const [error, setError] = useState('');
+  useEffect(() => { if (!form.restaurantId && stores.data?.[0]) setForm(current => ({ ...current, restaurantId: String(stores.data![0]!.id) })); }, [form.restaurantId, stores.data]);
+  const busy = creating.isLoading || updating.isLoading;
+  const dishes = (menu.data ?? []).filter(item => Number(item.restaurantId) === Number(form.restaurantId));
+  function edit(offer: MerchantOffer) {
+    setEditing(offer); setError('');
+    setForm({ restaurantId: String(offer.restaurantId), code: offer.code, description: offer.description ?? '', discountType: offer.discountType, discountValue: offer.discountValue, minimumOrderAmount: offer.minimumOrderAmount, maximumDiscount: offer.maximumDiscount ?? '', startAt: localTime(offer.startAt), expiresAt: localTime(offer.expiresAt), totalUsageLimit: offer.totalUsageLimit == null ? '' : String(offer.totalUsageLimit), perUserUsageLimit: String(offer.perUserUsageLimit), isActive: offer.isActive, stackWithDishDiscount: offer.stackWithDishDiscount, menuItemIds: (offer.menuItemIds ?? []).map(Number) });
+  }
+  async function submit(event: FormEvent) {
+    event.preventDefault(); setError('');
+    try {
+      const payload: OfferInput = { ...form, restaurantId: Number(form.restaurantId), code: form.code.trim().toUpperCase(), description: form.description || null, startAt: new Date(form.startAt).toISOString(), expiresAt: new Date(form.expiresAt).toISOString(), maximumDiscount: form.maximumDiscount || null, totalUsageLimit: form.totalUsageLimit ? Number(form.totalUsageLimit) : null, perUserUsageLimit: Number(form.perUserUsageLimit), menuItemIds: form.menuItemIds.length ? form.menuItemIds : null };
+      if (editing) await update({ id: Number(editing.id), data: { ...payload, expectedVersion: editing.version } }).unwrap();
+      else await create(payload).unwrap();
+      toast.success('Offer saved'); setEditing(null); setForm(initial());
+    } catch (err) { setError((err as { data?: { message?: string } })?.data?.message ?? 'Could not save this offer. Check dates and amounts.'); }
+  }
+  if (offers.isLoading || stores.isLoading || menu.isLoading) return <main className="p-6"><Skeleton /></main>;
+  if (offers.isError || stores.isError || menu.isError) return <main className="p-6"><ErrorState message="Could not load your offers and menu." /><Button onClick={() => { void offers.refetch(); void stores.refetch(); void menu.refetch(); }}>Retry</Button></main>;
+  if (!stores.data?.length) return <main className="p-6"><EmptyState title="Register your store first" description="Offers belong to one of your outlets." action={<Link href="/merchant/settings" className="p40-button p40-button--primary">Register store</Link>} /></main>;
+  return <main className="p-4 sm:p-6 max-w-7xl mx-auto"><PageHeader title="Offers & pricing" description="Set the terms. Checkout validates them before every order." />
+    <Card className="p-5 mb-5"><h2>Dish prices and scheduled sales</h2><p>Set base and discounted prices on each dish, with optional start/end dates. Active sale prices appear automatically on menus and in carts.</p><Link href="/merchant/menu" className="p40-button p40-button--secondary">Manage dish prices</Link><Link href="/merchant/settings" className="ml-4 underline">Store minimum order & delivery area</Link></Card>
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]"><Card className="p-5"><h2>{editing ? `Edit ${editing.code}` : 'Create an offer'}</h2><form onSubmit={submit} className="grid gap-4"><fieldset disabled={busy} className="border-0 p-0 m-0 grid gap-4">
+      <label className="p40-field">Outlet<select className="p40-input" value={form.restaurantId} disabled={!!editing} onChange={e => setForm({ ...form, restaurantId: e.target.value, menuItemIds: [] })}>{stores.data.map(store => <option key={store.id} value={String(store.id)}>{store.name}</option>)}</select></label>
+      <label className="p40-field">Unique offer code<input className="p40-input" required pattern="[A-Za-z0-9_-]{3,50}" maxLength={50} value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="YOURSTORE20" /></label>
+      <label className="p40-field">Customer description<input className="p40-input" maxLength={500} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></label>
+      <div className="p40-form-grid"><label className="p40-field">Discount type<select className="p40-input" value={form.discountType} onChange={e => setForm({ ...form, discountType: e.target.value as 'PERCENTAGE' | 'FIXED' })}><option value="PERCENTAGE">Percentage</option><option value="FIXED">Fixed amount (₹)</option></select></label><label className="p40-field">Discount value<input className="p40-input" type="number" required min="0.01" step="0.01" max={form.discountType === 'PERCENTAGE' ? 100 : 99999999.99} value={form.discountValue} onChange={e => setForm({ ...form, discountValue: e.target.value })} /></label></div>
+      <div className="p40-form-grid">{([['minimumOrderAmount', 'Minimum food subtotal (₹)'], ['maximumDiscount', 'Maximum saving (₹, optional)']] as const).map(([key, label]) => <label className="p40-field" key={key}>{label}<input className="p40-input" type="number" min={key === 'minimumOrderAmount' ? '0' : '0.01'} step="0.01" required={key === 'minimumOrderAmount'} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></label>)}</div>
+      <div className="p40-form-grid">{([['startAt', 'Starts'], ['expiresAt', 'Ends']] as const).map(([key, label]) => <label key={key} className="p40-field">{label} (your local time)<input className="p40-input" type="datetime-local" required value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></label>)}</div>
+      <div className="p40-form-grid">{([['totalUsageLimit', 'Total redemptions (blank = unlimited)'], ['perUserUsageLimit', 'Redemptions per customer']] as const).map(([key, label]) => <label key={key} className="p40-field">{label}<input className="p40-input" type="number" min="1" step="1" required={key === 'perUserUsageLimit'} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} /></label>)}</div>
+      <fieldset className="border border-slate-200 rounded-xl p-3"><legend>Eligible dishes</legend><p className="text-sm text-slate-500">None selected means the whole menu. The minimum uses the cart food subtotal after dish sales, before this offer.</p><div className="max-h-52 overflow-auto grid gap-2">{dishes.map(item => <label key={item.id} className="flex gap-2 items-center"><input type="checkbox" checked={form.menuItemIds.includes(Number(item.id))} onChange={e => setForm({ ...form, menuItemIds: e.target.checked ? [...form.menuItemIds, Number(item.id)] : form.menuItemIds.filter(id => id !== Number(item.id)) })} />{item.name}</label>)}</div></fieldset>
+      <label className="flex items-center gap-2"><input type="checkbox" checked={form.stackWithDishDiscount} onChange={e => setForm({ ...form, stackWithDishDiscount: e.target.checked })} />Also discount dishes already on sale</label><label className="flex items-center gap-2"><input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} />Enable this offer during its scheduled dates</label>
+      <p className="text-sm text-slate-500">One code per order. Discounts apply to eligible food only, not delivery fees, platform fees or taxes. Existing orders retain their original terms.</p>
+    </fieldset>{error && <p role="alert" className="text-red-700">{error}</p>}<div className="flex gap-3"><Button disabled={busy}>{busy ? 'Saving…' : 'Save offer'}</Button>{editing && <Button type="button" variant="secondary" onClick={() => { setEditing(null); setForm(initial()); }}>Cancel edit</Button>}</div></form></Card>
+    <div className="grid gap-4 content-start">{!offers.data?.length && <EmptyState title="No offers yet" description="Create an offer for an outlet or selected dishes." />}{offers.data?.map(offer => <Card key={offer.id} className="p-5"><div className="flex justify-between gap-3"><h3 className="m-0">{offer.code}</h3><span className="text-sm">{!offer.isActive ? 'Paused' : new Date(offer.expiresAt) <= new Date() ? 'Expired' : new Date(offer.startAt) > new Date() ? 'Scheduled' : 'Active'}</span></div><p>{stores.data?.find(store => Number(store.id) === Number(offer.restaurantId))?.name}</p><p>{offer.discountType === 'PERCENTAGE' ? `${offer.discountValue}%` : <Price value={offer.discountValue} />} off · minimum <Price value={offer.minimumOrderAmount} />{offer.maximumDiscount && <> · up to <Price value={offer.maximumDiscount} /></>}</p><p className="text-sm text-slate-500">{offer.menuItemIds?.length ? `${offer.menuItemIds.length} selected dishes` : 'Whole menu'} · {offer.stackWithDishDiscount ? 'Combines with dish sales' : 'Excludes dishes already on sale'}</p><p className="text-sm">{new Date(offer.startAt).toLocaleString()} — {new Date(offer.expiresAt).toLocaleString()}</p><div className="flex gap-3"><Button variant="secondary" onClick={() => edit(offer)}>Edit terms</Button><Button variant="secondary" disabled={busy} onClick={async () => { try { await update({ id: Number(offer.id), data: { expectedVersion: offer.version, isActive: !offer.isActive } }).unwrap(); toast.success('Offer updated'); } catch { toast.error('Could not update. Refresh if another staff member changed this offer.'); } }}>{offer.isActive ? 'Pause' : 'Enable'}</Button></div></Card>)}</div></div>
+  </main>;
+}

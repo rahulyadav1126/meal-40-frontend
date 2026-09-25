@@ -5,10 +5,13 @@ import { useParams } from 'next/navigation';
 import { AlertCircle, Check, Circle, XCircle } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { API_URLS, STORAGE_KEYS } from '@plate40/config';
-import { baseApi, useAppDispatch, useOrderQuery } from '@plate40/state';
+import { baseApi, useAppDispatch, useOrderQuery, useOrderTrackingQuery, useCancelOrderMutation } from '@plate40/state';
+import { toast } from 'sonner';
 import { OrderStatus, PaymentStatus, PaymentMethod } from '@plate40/types';
 import {
   Card,
+  Button,
+  DeliveryMap,
   ErrorState,
   OrderStatusBadge,
   PageHeader,
@@ -37,8 +40,10 @@ const CANCELLED_STATUSES: string[] = [OrderStatus.REJECTED, OrderStatus.CANCELLE
 export default function OrderDetailPage() {
   const id = useParams<{ id: string }>().id;
   const dispatch = useAppDispatch();
-  const { data: order, isLoading, isError } = useOrderQuery(id);
+  const { data: order, isLoading, isError } = useOrderQuery(id, { pollingInterval: 15000, refetchOnFocus: true });
+  const tracking = useOrderTrackingQuery(id, { pollingInterval: 10000, skip: !order || [OrderStatus.DELIVERED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.REFUNDED].includes(order.orderStatus), refetchOnFocus: true });
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [cancelOrder, cancelState] = useCancelOrderMutation();
   const [hasReviewed, setHasReviewed] = useState(false);
 
   // ── Real-time updates via Socket.IO ──────────────────────────────────────
@@ -46,6 +51,12 @@ export default function OrderDetailPage() {
     const token = window.localStorage.getItem(STORAGE_KEYS.accessToken);
     if (!token) return;
     const socket = io(API_URLS.socket, { auth: { token } });
+    const reconnect = () => {
+      const currentToken = window.localStorage.getItem(STORAGE_KEYS.accessToken);
+      socket.disconnect();
+      if (currentToken) { socket.auth = { token: currentToken }; socket.connect(); }
+    };
+    window.addEventListener('plate40:session-changed', reconnect);
     const refresh = () => dispatch(baseApi.util.invalidateTags([{ type: 'Orders', id }]));
     [
       'order.accepted',
@@ -60,6 +71,7 @@ export default function OrderDetailPage() {
       'payment.failed',
     ].forEach((event) => socket.on(event, refresh));
     return () => {
+      window.removeEventListener('plate40:session-changed', reconnect);
       socket.disconnect();
     };
   }, [dispatch, id]);
@@ -82,16 +94,7 @@ export default function OrderDetailPage() {
   const isRejected = order.orderStatus === OrderStatus.REJECTED;
   const current = ORDER_FLOW.indexOf(order.orderStatus as (typeof ORDER_FLOW)[number]);
 
-  let displayPaymentStatus = order.paymentStatus;
-  if (order.paymentStatus === PaymentStatus.PENDING) {
-    if (order.paymentMethod === PaymentMethod.ONLINE && current >= ORDER_FLOW.indexOf(OrderStatus.ACCEPTED)) {
-      displayPaymentStatus = PaymentStatus.PAID;
-    } else if (order.orderStatus === OrderStatus.DELIVERED) {
-      displayPaymentStatus = PaymentStatus.PAID;
-    } else if (isCancelled || isRejected) {
-      displayPaymentStatus = order.paymentMethod === PaymentMethod.ONLINE ? PaymentStatus.REFUNDED : PaymentStatus.FAILED;
-    }
-  }
+  const displayPaymentStatus = order.paymentStatus;
 
   return (
     <main className="p40-container py-8 pb-16 min-h-[70vh]">
@@ -106,6 +109,13 @@ export default function OrderDetailPage() {
         <Card className="p-5">
           <span className="text-p40-primary text-[0.72rem] font-[800] tracking-[0.08em] uppercase">Live kitchen &amp; logistics telemetry</span>
           <h2 className="mt-2 mb-5">{order.restaurant?.name ?? 'Your Plate40 kitchen'}</h2>
+          {order.orderStatus === OrderStatus.PENDING && <Button variant="danger" disabled={cancelState.isLoading} onClick={async () => {
+            const reason = window.prompt('Why would you like to cancel?');
+            if (!reason?.trim()) return;
+            try { await cancelOrder({ id, reason: reason.trim().slice(0, 500) }).unwrap(); toast.success('Order cancelled'); }
+            catch (error) { toast.error((error as { data?: { message?: string } })?.data?.message ?? 'Order could not be cancelled. The restaurant may have accepted it.'); }
+          }}>Cancel pending order</Button>}
+          {!!order.items?.length && <ul className="list-none p-0 divide-y divide-slate-100">{order.items.map(item => <li key={item.id} className="flex justify-between gap-3 py-3"><span>{item.quantity} × {item.itemName}</span><Price value={item.totalPrice} /></li>)}</ul>}
 
           {order.delivery?.deliveryPartner ? (
             <div className="mt-4 p-4 rounded-xl bg-indigo-50">
@@ -126,6 +136,7 @@ export default function OrderDetailPage() {
               ) : null}
             </div>
           ) : null}
+          {!isCancelled && order.orderStatus !== OrderStatus.DELIVERED && order.orderStatus !== OrderStatus.REFUNDED && <DeliveryMap tracking={tracking.currentData} loading={tracking.isLoading} error={tracking.isError} onRetry={() => { void tracking.refetch(); }} />}
           {order.deliveryOtp ? (
             <div className="mt-3 p-4 rounded-xl bg-orange-50">
               <strong>Delivery OTP: {order.deliveryOtp}</strong>
@@ -174,15 +185,14 @@ export default function OrderDetailPage() {
                 </strong>
                 {isRejected ? (
                   <>
-                    • If you paid online, a <strong>full refund</strong> will be processed to your
-                    original payment method within 3–5 business days.
+                    • If you paid online, contact support to confirm your refund status.
                     <br />
                     • For Cash on Delivery orders, no payment was collected.
                     <br />• You can place a new order from the same or a different restaurant.
                   </>
                 ) : (
                   <>
-                    • If you paid online, a <strong>full refund</strong> will be initiated shortly.
+                    • If you paid online, contact support to confirm your refund status.
                     <br />• No charges apply for COD orders that are cancelled.
                   </>
                 )}
@@ -247,6 +257,7 @@ export default function OrderDetailPage() {
             <span>Subtotal</span>
             <Price value={order.subtotal} />
           </div>
+          {Number(order.discountAmount) > 0 && <div className="flex justify-between gap-4 text-[0.85rem] text-green-700"><span>Offer discount</span><span>−<Price value={order.discountAmount} /></span></div>}
           <div className="flex justify-between gap-4 text-[0.85rem]">
             <span>Delivery fee</span>
             <Price value={order.deliveryFee} />

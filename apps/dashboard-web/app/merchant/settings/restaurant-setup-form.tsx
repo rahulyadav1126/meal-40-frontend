@@ -35,15 +35,15 @@ export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Res
       ? {
           name: restaurant.name,
           description: restaurant.description || '',
-          phone: '', // phone is on user not restaurant, but assuming it's passed or not needed for update
-          email: '',
+          phone: restaurant.phone ?? '',
+          email: restaurant.email ?? '',
           addressLine1: restaurant.addressLine1 || '',
-          addressLine2: '',
+          addressLine2: restaurant.addressLine2 ?? '',
           city: restaurant.city || '',
           state: restaurant.state || '',
-          postalCode: '',
-          latitude: '0',
-          longitude: '0',
+          postalCode: restaurant.postalCode ?? '',
+          latitude: restaurant.latitude ?? '',
+          longitude: restaurant.longitude ?? '',
           deliveryRadiusKm: restaurant.deliveryRadiusKm,
           minimumOrderAmount: restaurant.minimumOrderAmount,
         }
@@ -98,6 +98,7 @@ export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Res
       } else {
         await createRestaurant(payload).unwrap();
         toast.success('Restaurant profile created. You can now add menu items.');
+        onCancel?.();
       }
     } catch (error) {
       toast.error(apiMessage(error) ?? (restaurant ? 'Could not update profile.' : 'Could not create the restaurant profile.'));

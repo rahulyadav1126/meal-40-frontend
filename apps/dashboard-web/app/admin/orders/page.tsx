@@ -1,6 +1,7 @@
 'use client';
 
 import type { ColumnDef } from '@tanstack/react-table';
+import Link from 'next/link';
 import { useAdminOrdersQuery } from '@plate40/state';
 import type { Order } from '@plate40/types';
 import { Card, ErrorState, OrderStatusBadge, PageHeader, PaymentStatusBadge, Price, Skeleton } from '@plate40/ui';
@@ -8,7 +9,7 @@ import { formatDate } from '@plate40/utils';
 import { DataTable } from '../../../components/data-table';
 
 const columns: Array<ColumnDef<Order>> = [
-  { accessorKey: 'orderNumber', header: 'Order ID', cell: ({ row }) => <span className="order-code">#{row.original.orderNumber}</span> },
+  { accessorKey: 'orderNumber', header: 'Order ID', cell: ({ row }) => <Link className="order-code underline" href={`/admin/orders/${row.original.id}`}>#{row.original.orderNumber}</Link> },
   { accessorKey: 'restaurantId', header: 'Restaurant', cell: ({ row }) => row.original.restaurant?.name ?? `#${row.original.restaurantId}` },
   { accessorKey: 'totalAmount', header: 'Amount', cell: ({ row }) => <Price value={row.original.totalAmount} /> },
   { accessorKey: 'paymentStatus', header: 'Payment', cell: ({ row }) => <PaymentStatusBadge status={row.original.paymentStatus} /> },

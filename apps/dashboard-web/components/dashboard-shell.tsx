@@ -22,6 +22,7 @@ import {
 import { ROUTES } from '@plate40/config';
 import { UserRole } from '@plate40/types';
 import { clearSession } from '@plate40/auth';
+import { revokeCurrentSession } from '@plate40/api-client';
 import { baseApi, useAppDispatch } from '@plate40/state';
 import { useDashboardSession } from './use-dashboard-session';
 
@@ -38,6 +39,7 @@ const MERCHANT_NAV = [
   { href: ROUTES.merchant.dashboard, label: 'Dashboard', icon: LayoutDashboard },
   { href: ROUTES.merchant.orders, label: 'Live KDS orders', icon: CookingPot },
   { href: ROUTES.merchant.menu, label: 'Menu & stock', icon: Store },
+  { href: ROUTES.merchant.offers, label: 'Offers & pricing', icon: CreditCard },
   { href: ROUTES.merchant.earnings, label: 'Earnings & payouts', icon: BarChart3 },
   { href: ROUTES.merchant.reviews, label: 'Customer reviews', icon: UsersRound },
   { href: ROUTES.merchant.settings, label: 'Store settings', icon: Settings },
@@ -126,7 +128,8 @@ export function DashboardShell({
         </nav>
         <button
           className="p40-button p40-button--secondary mt-4 w-full"
-          onClick={() => {
+          onClick={async () => {
+            try { await revokeCurrentSession(); } catch { window.alert('Signed out on this device. Server revocation could not be confirmed; use session management to revoke it when connected.'); }
             clearSession();
             dispatch(baseApi.util.resetApiState());
             router.replace('/login');

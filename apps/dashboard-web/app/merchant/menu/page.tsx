@@ -9,7 +9,6 @@ import {
   useDeleteMerchantMenuItemMutation,
   useMerchantMenuQuery,
   useMerchantRestaurantsQuery,
-  useUpdateMerchantMenuItemMutation,
 } from '@plate40/state';
 import type { MenuItem } from '@plate40/types';
 import {
@@ -24,32 +23,7 @@ import {
 } from '@plate40/ui';
 import { DataTable } from '../../../components/data-table';
 import { AddMenuItemDialog } from './add-menu-item-dialog';
-
-function AvailabilityToggle({ item }: { item: MenuItem }) {
-  const [updateItem, { isLoading }] = useUpdateMerchantMenuItemMutation();
-  const toggle = async () => {
-    try {
-      await updateItem({ itemId: item.id, data: { isAvailable: !item.isAvailable } }).unwrap();
-      toast.success(`${item.name} is now ${item.isAvailable ? 'unavailable' : 'available'}`);
-    } catch {
-      toast.error('Could not update item availability');
-    }
-  };
-  return (
-    <button
-      type="button"
-      className={`stock-toggle ${item.isAvailable ? 'is-on' : ''}`}
-      role="switch"
-      aria-checked={item.isAvailable}
-      aria-label={`Make ${item.name} ${item.isAvailable ? 'unavailable' : 'available'}`}
-      onClick={toggle}
-      disabled={isLoading}
-    >
-      <span />
-      <small>{item.isAvailable ? 'In stock' : 'Off menu'}</small>
-    </button>
-  );
-}
+import { ItemAvailability } from './item-availability';
 
 export default function MerchantMenuPage() {
   const [showAddItem, setShowAddItem] = useState(false);
@@ -143,7 +117,7 @@ export default function MerchantMenuPage() {
       {
         accessorKey: 'isAvailable',
         header: 'Availability',
-        cell: ({ row }) => <AvailabilityToggle item={row.original} />,
+        cell: ({ row }) => <ItemAvailability key={`${row.original.id}-${row.original.soldOutUntil}-${JSON.stringify(row.original.serviceHours)}`} item={row.original} />,
       },
       {
         id: 'actions',

@@ -4,6 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from 'react';
 
 import Link from 'next/link';
 import { Minus, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ROUTES } from '@plate40/config';
 import { useCartItemsQuery, useCartsQuery, useRemoveCartItemMutation, useUpdateCartItemMutation } from '@plate40/state';
 import { STORAGE_KEYS } from '@plate40/config';
@@ -29,7 +30,8 @@ function sessionSnapshot() {
 
 export default function CartPage() {
   const carts = useCartsQuery();
-  const cart = carts.data?.[0];
+  const [selectedCart, setSelectedCart] = useState('');
+  const cart = carts.data?.find(item => String(item.id) === selectedCart) ?? carts.data?.[0];
   const items = useCartItemsQuery(cart?.id ?? 0, { skip: !cart });
   const [updateItem] = useUpdateCartItemMutation();
   const [removeItem] = useRemoveCartItemMutation();
@@ -75,6 +77,7 @@ export default function CartPage() {
   return (
     <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader title="Your plate" description={`From ${cart.restaurant?.name ?? 'your selected restaurant'}`} />
+      {(carts.data?.length ?? 0) > 1 && <label className="p40-field mb-5">Restaurant cart<select className="p40-input" value={String(cart.id)} onChange={event => setSelectedCart(event.target.value)}>{carts.data?.map(item => <option key={item.id} value={String(item.id)}>{item.restaurant?.name ?? `Restaurant ${item.restaurantId}`}</option>)}</select></label>}
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
         <section className="grid gap-3.5">
           {validItems.map((item) => (
@@ -87,7 +90,7 @@ export default function CartPage() {
                 <div className="flex-1">
                   <h3 className="my-1 text-base sm:text-lg">{item.menuItem.name}</h3>
                   <p className="my-1 text-p40-muted text-[0.82rem] line-clamp-2 sm:line-clamp-none">{item.menuItem.description}</p>
-                  <Price value={item.menuItem.discountedPrice || item.menuItem.price} />
+                  <div className="flex items-center gap-2"><Price value={item.menuItem.discountedPrice ?? item.menuItem.price} />{item.menuItem.discountedPrice != null && <del className="text-sm text-slate-400"><Price value={item.menuItem.price} /></del>}</div>
                 </div>
               </div>
               
@@ -97,7 +100,7 @@ export default function CartPage() {
                     className="w-[34px] h-[34px] grid place-items-center border-0 bg-transparent text-inherit cursor-pointer"
                     aria-label="Decrease quantity"
                     disabled={item.quantity <= 1}
-                    onClick={() => updateItem({ itemId: item.id, quantity: item.quantity - 1 })}
+                    onClick={async () => { try { await updateItem({ itemId: item.id, quantity: item.quantity - 1 }).unwrap(); } catch { toast.error('Could not update quantity. Please refresh.'); } }}
                   >
                     <Minus size={15} />
                   </button>
@@ -105,7 +108,7 @@ export default function CartPage() {
                   <button
                     className="w-[34px] h-[34px] grid place-items-center border-0 bg-transparent text-inherit cursor-pointer"
                     aria-label="Increase quantity"
-                    onClick={() => updateItem({ itemId: item.id, quantity: item.quantity + 1 })}
+                    onClick={async () => { try { await updateItem({ itemId: item.id, quantity: item.quantity + 1 }).unwrap(); } catch (error) { toast.error((error as { data?: { message?: string } })?.data?.message ?? 'Could not increase quantity'); } }}
                   >
                     <Plus size={15} />
                   </button>
@@ -113,7 +116,7 @@ export default function CartPage() {
                 <button
                   className="text-p40-primary w-[34px] h-[34px] grid place-items-center border-0 bg-transparent cursor-pointer hover:bg-rose-50 rounded-full transition-colors"
                   aria-label="Remove item"
-                  onClick={() => removeItem(item.id)}
+                  onClick={async () => { try { await removeItem(item.id).unwrap(); } catch { toast.error('Could not remove item'); } }}
                 >
                   <Trash2 size={18} />
                 </button>
@@ -136,7 +139,7 @@ export default function CartPage() {
             <span>Estimated subtotal</span>
             <Price value={subtotal} />
           </div>
-          <Link className="p40-button p40-button--primary text-center" href={ROUTES.customer.checkout}>
+          <Link className="p40-button p40-button--primary text-center" href={`${ROUTES.customer.checkout}?cartId=${cart.id}`}>
             Proceed to checkout
           </Link>
           <small className="text-p40-muted leading-[1.5]">Final pricing and availability are always confirmed by the backend.</small>

@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Clock3, MapPin, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES } from '@plate40/config';
-import { useAddCartItemMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useCartsQuery, useCartItemsQuery, useMenuQuery, useRestaurantQuery } from '@plate40/state';
+import { useAddCartItemMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useCartsQuery, useCartItemsQuery, useMenuQuery, useRestaurantQuery, useRestaurantOffersQuery } from '@plate40/state';
 import { FoodType } from '@plate40/types';
 import {
   Badge,
@@ -23,10 +23,11 @@ import { AuthModal } from '../../../components/auth-modal';
 export default function RestaurantMenuPage() {
   const id = useParams<{ id: string }>().id;
   const router = useRouter();
-  const { data: restaurant, isLoading: restaurantLoading, isError } = useRestaurantQuery(id);
-  const { data: menu = [], isLoading: menuLoading } = useMenuQuery(id);
+  const { data: restaurant, isLoading: restaurantLoading, isError } = useRestaurantQuery(id, { pollingInterval: 60000 });
+  const { data: menu = [], isLoading: menuLoading } = useMenuQuery(id, { pollingInterval: 60000 });
+  const { data: offers = [] } = useRestaurantOffersQuery(id, { pollingInterval: 60000 });
   const { data: carts } = useCartsQuery();
-  const cartId = carts?.[0]?.id;
+  const cartId = carts?.find(cart => Number(cart.restaurantId) === Number(id))?.id;
   const { data: cartItems } = useCartItemsQuery(cartId as number, { skip: !cartId });
   const [addItem, addState] = useAddCartItemMutation();
   const [updateItem, updateState] = useUpdateCartItemMutation();
@@ -117,12 +118,13 @@ export default function RestaurantMenuPage() {
                 <MapPin size={16} /> {restaurant.city}, {restaurant.state}
               </span>
               <span className="inline-flex gap-1.5 items-center text-[0.84rem]">
-                <Clock3 size={16} /> 20-25 mins
+                <Clock3 size={16} /> {restaurant.isAcceptingOrders ? 'Accepting orders' : restaurant.statusReason ?? 'Closed'}
               </span>
             </div>
           </div>
         </div>
       </section>
+      {!!offers.length && <section className="p40-container pb-4" aria-label="Restaurant offers"><div className="flex gap-3 overflow-x-auto pb-2">{offers.map(offer => <Card key={offer.id} className="min-w-[260px] max-w-[340px] shrink-0 border-green-200 bg-green-50/50"><Badge tone="success">{offer.code}</Badge><h2 className="text-lg my-2">{offer.discountType === 'PERCENTAGE' ? `${offer.discountValue}% off` : `₹${offer.discountValue} off`}</h2><p className="text-sm text-slate-600 m-0">Minimum food subtotal ₹{offer.minimumOrderAmount}{offer.maximumDiscount ? ` · Up to ₹${offer.maximumDiscount} off` : ''}. {offer.menuItemIds?.length ? 'Selected dishes only.' : 'Across the menu.'} {!offer.stackWithDishDiscount && 'Excludes dishes already on sale.'} Apply at checkout; eligibility and usage limits apply.</p></Card>)}</div></section>}
       <div className="p40-container grid grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_300px] gap-5 items-start py-4 pb-16">
         <aside className="p40-card sticky top-[90px] p-4 grid gap-3.5 hidden lg:grid">
           <strong>Menu categories</strong>
@@ -145,15 +147,16 @@ export default function RestaurantMenuPage() {
             Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} />)
           ) : menu.length ? (
             menu.map((item) => (
-              <Card className="p-4 grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-4" key={item.id}>
+              <Card id={`dish-${item.id}`} className="p-4 grid grid-cols-1 sm:grid-cols-[1fr_130px] gap-4 scroll-mt-28" key={item.id}>
                 <div>
                   <div className="flex gap-2 items-center">
                     <FoodTypeIndicator vegetarian={item.foodType === FoodType.VEG} />{' '}
                     {item.isFeatured ? <Badge tone="danger">Bestseller</Badge> : null}
                   </div>
                   <h3 className="mt-2 mb-1">{item.name}</h3>
-                  <Price value={item.discountedPrice || item.price} />
+                  <div className="flex items-center gap-2"><Price value={item.discountedPrice ?? item.price} />{item.discountedPrice != null && <del className="text-sm text-slate-400"><Price value={item.price} /></del>}</div>
                   <p className="text-p40-muted text-[0.84rem] mt-2 mb-0">{item.description}</p>
+                  {item.isOrderable === false && <p className="text-amber-800 text-sm" role="status">{item.availabilityReason}</p>}
                 </div>
                 <div className="grid gap-2 h-max sm:h-auto">
                   <div
@@ -174,7 +177,7 @@ export default function RestaurantMenuPage() {
                           </button>
                           <span className="font-bold text-sm text-slate-800">{cartItem.quantity}</span>
                           <button
-                            disabled={updateState.isLoading}
+                            disabled={updateState.isLoading || item.isOrderable === false}
                             onClick={() => updateQuantity(cartItem.id, cartItem.quantity + 1)}
                             className="w-8 h-full flex items-center justify-center font-bold text-p40-primary text-xl disabled:opacity-50"
                           >
@@ -186,7 +189,7 @@ export default function RestaurantMenuPage() {
                     return (
                       <Button
                         variant="secondary"
-                        disabled={addState.isLoading || !item.isAvailable}
+                        disabled={addState.isLoading || !item.isAvailable || item.isOrderable === false}
                         onClick={() => add(item.id)}
                       >
                         + Add

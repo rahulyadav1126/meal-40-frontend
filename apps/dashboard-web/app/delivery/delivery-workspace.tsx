@@ -14,12 +14,14 @@ import {
   useDeliveryHistoryQuery,
   useDeliveryProfileQuery,
   useSetDeliveryAvailabilityMutation,
+  useOrderTrackingQuery,
 } from '@plate40/state';
-import { DeliveryStatus, type Delivery } from '@plate40/types';
+import { DeliveryStatus, PaymentMethod, type Delivery } from '@plate40/types';
 import {
   Badge,
   Button,
   Card,
+  DeliveryMap,
   EmptyState,
   ErrorState,
   PageHeader,
@@ -45,14 +47,17 @@ function DeliveryCard({
   available?: boolean;
 }) {
   const [otp, setOtp] = useState('');
+  const [cashCollected, setCashCollected] = useState(false);
   const [act, actionState] = useDeliveryActionMutation();
   const next = NEXT[delivery.status];
+  const tracking = useOrderTrackingQuery(delivery.orderId, { pollingInterval: 10000, skip: available || [DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED].includes(delivery.status) });
   async function run(action: string) {
     try {
       await act({
         deliveryId: delivery.id,
         action,
         otp: action === 'complete' ? otp : undefined,
+        cashCollected: action === 'complete' ? cashCollected : undefined,
       }).unwrap();
       toast.success('Delivery updated');
     } catch (error) {
@@ -113,6 +118,7 @@ function DeliveryCard({
           Open customer location in Maps
         </a>
       ) : null}
+      {!available && ![DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED].includes(delivery.status) && <DeliveryMap tracking={tracking.currentData} loading={tracking.isLoading} error={tracking.isError} onRetry={() => { void tracking.refetch(); }} />}
       <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-slate-100">
         {available ? (
           <>
@@ -136,15 +142,17 @@ function DeliveryCard({
               inputMode="numeric"
               maxLength={6}
               placeholder="Customer OTP"
+              aria-label="Customer delivery verification code"
               value={otp}
               onChange={(event) => setOtp(event.target.value.replace(/\D/g, ''))}
             />
             <Button
-              disabled={actionState.isLoading || otp.length !== 6}
+              disabled={actionState.isLoading || otp.length !== 6 || (delivery.order.paymentMethod === PaymentMethod.COD && !cashCollected)}
               onClick={() => run('complete')}
             >
               Verify OTP & Complete
             </Button>
+            {delivery.order.paymentMethod === PaymentMethod.COD && <label className="flex items-center gap-2"><input type="checkbox" checked={cashCollected} onChange={event => setCashCollected(event.target.checked)} />Collected <Price value={delivery.order.totalAmount} /> in cash</label>}
             <Button
               variant="danger"
               disabled={actionState.isLoading}
@@ -175,11 +183,18 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
     const token = window.localStorage.getItem(STORAGE_KEYS.accessToken);
     if (!token) return;
     const socket = io(API_URLS.socket, { auth: { token } });
+    const reconnect = () => {
+      const currentToken = window.localStorage.getItem(STORAGE_KEYS.accessToken);
+      socket.disconnect();
+      if (currentToken) { socket.auth = { token: currentToken }; socket.connect(); }
+    };
+    window.addEventListener('plate40:session-changed', reconnect);
     const refresh = () =>
       dispatch(baseApi.util.invalidateTags(['Delivery', 'DeliveryProfile', 'DeliveryEarnings']));
     socket.on('delivery.available', refresh);
     socket.on('delivery.updated', refresh);
     return () => {
+      window.removeEventListener('plate40:session-changed', reconnect);
       socket.disconnect();
     };
   }, [dispatch]);
@@ -313,7 +328,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
           <Button
             disabled={pending || availabilityState.isLoading}
             variant={partner.isOnline ? 'danger' : 'operational'}
-            onClick={() => setOnline(!partner.isOnline)}
+            onClick={async () => { try { await setOnline(!partner.isOnline).unwrap(); } catch (error) { toast.error((error as { data?: { message?: string } })?.data?.message ?? 'Unable to update availability'); } }}
           >
             {partner.isOnline ? 'Go Offline' : 'Go Online'}
           </Button>

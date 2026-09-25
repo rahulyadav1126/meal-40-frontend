@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { useMerchantRestaurantsQuery, useUpdateMerchantRestaurantMutation } from '@plate40/state';
-import { RestaurantOpeningStatus } from '@plate40/types';
+import { useMerchantRestaurantsQuery } from '@plate40/state';
 import { Button, Card, ErrorState, PageHeader, Skeleton } from '@plate40/ui';
 import { RestaurantSetupForm } from './restaurant-setup-form';
+import { AvailabilityPanel } from './availability-panel';
 
 export default function SettingsPage() {
   const { data = [], isLoading, isError } = useMerchantRestaurantsQuery();
-  const [updateRestaurant, updateState] = useUpdateMerchantRestaurantMutation();
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [selectedId, setSelectedId] = useState('');
   if (isLoading)
     return (
     <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
@@ -23,41 +23,25 @@ export default function SettingsPage() {
         <ErrorState />
       </main>
     );
-  const restaurant = data[0];
+  const restaurant = data.find(r => String(r.id) === selectedId) ?? data[0];
   return (
     <main className="p-4 sm:p-6 max-w-[1600px] mx-auto">
+      {data.length > 1 && <label className="p40-field mb-5">Outlet<select className="p40-input" value={restaurant?.id ?? ''} onChange={e => { setSelectedId(e.target.value); setIsEditing(false); }}>{data.map(r => <option value={r.id} key={r.id}>{r.name} — {r.city}</option>)}</select></label>}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
         <PageHeader
           title="Store settings"
           description="Restaurant profile and live operational state."
         />
-        {restaurant && !isEditing && (
+        {restaurant && !isEditing && !isCreating && (
           <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              disabled={updateState.isLoading}
-              onClick={async () => {
-                const newStatus =
-                  restaurant.openingStatus === RestaurantOpeningStatus.OPEN
-                    ? RestaurantOpeningStatus.CLOSED
-                    : RestaurantOpeningStatus.OPEN;
-                try {
-                  await updateRestaurant({ id: restaurant.id, openingStatus: newStatus }).unwrap();
-                  toast.success(`Store marked as ${newStatus}`);
-                } catch {
-                  toast.error('Could not update store status');
-                }
-              }}
-            >
-              {updateState.isLoading ? 'Updating...' : restaurant.openingStatus === RestaurantOpeningStatus.OPEN ? 'Close Store' : 'Open Store'}
-            </Button>
             <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+            <Button variant="secondary" onClick={() => setIsCreating(true)}>Register another outlet</Button>
           </div>
         )}
       </div>
-      {restaurant ? (
+      {isCreating ? <RestaurantSetupForm key="new-outlet" onCancel={() => setIsCreating(false)} /> : restaurant ? (
         isEditing ? (
-          <RestaurantSetupForm restaurant={restaurant} onCancel={() => setIsEditing(false)} />
+          <RestaurantSetupForm key={restaurant.id} restaurant={restaurant} onCancel={() => setIsEditing(false)} />
         ) : (
         <Card className="p-8 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl border-none">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8">
@@ -96,6 +80,7 @@ export default function SettingsPage() {
       ) : (
         <RestaurantSetupForm />
       )}
+      {restaurant && !isEditing && !isCreating && <AvailabilityPanel key={`${restaurant.id}-${restaurant.availabilityVersion}`} restaurant={restaurant} />}
     </main>
   );
 }

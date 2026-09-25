@@ -20,6 +20,8 @@ interface Props {
   onClose: () => void;
 }
 const INITIAL_FORM = {
+  discountStartsAt: '',
+  discountEndsAt: '',
   name: '',
   categoryId: '',
   restaurantId: '',
@@ -49,6 +51,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
     description: item?.description ?? '',
     price: item?.price ?? '',
     discountedPrice: item?.discountedPrice ?? '',
+    discountStartsAt: item?.discountStartsAt ? new Date(new Date(item.discountStartsAt).getTime() - new Date(item.discountStartsAt).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '',
+    discountEndsAt: item?.discountEndsAt ? new Date(new Date(item.discountEndsAt).getTime() - new Date(item.discountEndsAt).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '',
     foodType: item?.foodType ?? FoodType.VEG,
     preparationTimeMinutes: item?.preparationTimeMinutes.toString() ?? '20',
     isAvailable: item?.isAvailable ?? true,
@@ -113,8 +117,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
       setError('Enter a valid price greater than zero.');
       return;
     }
-    if (discount !== null && (!Number.isFinite(discount) || discount <= 0 || discount >= price)) {
-      setError('Discount price must be greater than zero and lower than the regular price.');
+    if (discount !== null && (!Number.isFinite(discount) || discount < 0 || discount >= price)) {
+      setError('Discount price must be non-negative and lower than the regular price.');
       return;
     }
     try {
@@ -128,6 +132,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
         foodType: form.foodType,
         price: price.toFixed(2),
         discountedPrice: discount?.toFixed(2) ?? null,
+        discountStartsAt: form.discountStartsAt ? new Date(form.discountStartsAt).toISOString() : null,
+        discountEndsAt: form.discountEndsAt ? new Date(form.discountEndsAt).toISOString() : null,
         preparationTimeMinutes: Number(form.preparationTimeMinutes),
         isAvailable: form.isAvailable,
       };
@@ -290,7 +296,7 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   <span>₹</span>
                   <Input
                     inputMode="decimal"
-                    min="0.01"
+                    min="0"
                     step="0.01"
                     placeholder="199"
                     value={form.discountedPrice}
@@ -298,6 +304,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   />
                 </span>
               </label>
+              {(['discountStartsAt', 'discountEndsAt'] as const).map(field => <label className="p40-field" key={field}>{field === 'discountStartsAt' ? 'Sale starts' : 'Sale ends'} (optional, your local time)<Input type="datetime-local" value={form[field]} onChange={event => update(field, event.target.value)} /></label>)}
+              <p className="text-sm text-slate-500">Blank dates keep the discount active indefinitely. Remove the discounted price to stop a dish sale.</p>
               <fieldset className="p40-field menu-food-type">
                 <legend className="font-semibold text-sm text-[#06402b]">Food type</legend>
                 <div>

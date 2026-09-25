@@ -29,7 +29,7 @@ export default function MerchantRegisterPage() {
       const session = await register({ ...values, role: UserRole.MERCHANT }).unwrap();
       saveSession(session);
       toast.success('Merchant account created! Welcome to Plate40.');
-      router.push('/merchant/dashboard');
+      router.push('/merchant/settings');
     } catch (error) {
       const message =
         typeof error === 'object' && error && 'data' in error

@@ -6,6 +6,9 @@ export const API_URLS = {
 } as const;
 
 export const API_PATHS = {
+  search: '/search',
+  tracking: (orderId: number | string) => `/tracking/orders/${orderId}`,
+  deliveryLocation: (deliveryId: number) => `/tracking/deliveries/${deliveryId}/location`,
   auth: {
     login: '/auth/login',
     register: '/auth/register',
@@ -22,6 +25,8 @@ export const API_PATHS = {
   cartItems: '/cart/items',
   cartItem: (itemId: number) => `/cart/items/${itemId}`,
   orders: '/orders',
+  orderQuote: '/orders/quote',
+  restaurantOffers: (id: number | string) => `/restaurants/${id}/offers`,
   order: (orderId: number | string) => `/orders/${orderId}`,
   addresses: '/addresses',
   notifications: '/notifications',
@@ -32,6 +37,8 @@ export const API_PATHS = {
     details: (placeId: string) => `/locations/details/${encodeURIComponent(placeId)}`,
   },
   merchant: {
+    availability: (id: number) => `/merchant/restaurants/${id}/availability`,
+    offers: '/merchant/offers',
     restaurants: '/merchant/restaurants',
     orders: '/merchant/orders',
     menu: '/merchant/menu',
@@ -81,6 +88,7 @@ export const ACTIONS = {
 
 export const ROUTES = {
   customer: {
+    search: '/search',
     home: '/',
     login: '/login',
     register: '/register',
@@ -109,6 +117,7 @@ export const ROUTES = {
   },
   merchant: {
     dashboard: '/merchant/dashboard',
+    offers: '/merchant/offers',
     orders: '/merchant/orders',
     menu: '/merchant/menu',
     earnings: '/merchant/earnings',

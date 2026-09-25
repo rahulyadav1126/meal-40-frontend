@@ -17,10 +17,22 @@ import type {
   Review,
   CreateReviewDto,
   User,
+  AvailabilitySettings,
+  ServiceInterval,
+  OrderTracking,
+  DeliveryPosition,
+  MerchantOffer,
+  OfferInput,
+  OrderQuote,
+  CheckoutInput,
 } from '@plate40/types';
 import { baseApi } from './base-api';
 
 export interface RestaurantFilters {
+  q?: string;
+  openNow?: boolean;
+  latitude?: number;
+  longitude?: number;
   page?: number;
   limit?: number;
   search?: string;
@@ -49,6 +61,10 @@ export interface DeliveryRegistration extends Registration {
   documentUrl?: string;
 }
 export interface CreateMenuItemInput {
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
+  soldOutUntil?: string | null;
+  serviceHours?: ServiceInterval[] | null;
   restaurantId: number;
   categoryId: number;
   name: string;
@@ -130,6 +146,14 @@ function normalizeOrder(order: Order): Order {
 
 export const plate40Api = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    searchRestaurants: builder.query<PaginatedResult<Restaurant>, RestaurantFilters>({
+      query: (params) => ({ url: API_PATHS.search, params }),
+      providesTags: ['Restaurants', 'Menu'],
+    }),
+    updateAvailability: builder.mutation<Restaurant, { id: number; data: AvailabilitySettings & { expectedVersion: number } }>({
+      query: ({ id, data }) => ({ url: API_PATHS.merchant.availability(id), method: 'PATCH', data }),
+      invalidatesTags: ['Restaurants', 'Menu', 'Cart'],
+    }),
     login: builder.mutation<AuthSession, Credentials>({
       query: (data) => ({ client: 'auth', url: API_PATHS.auth.login, method: 'POST', data }),
     }),
@@ -203,11 +227,15 @@ export const plate40Api = baseApi.injectEndpoints({
       transformResponse: normalizeOrder,
       providesTags: (_r, _e, id) => [{ type: 'Orders', id }],
     }),
+    cancelOrder: builder.mutation<Order, { id: number | string; reason: string }>({
+      query: ({ id, reason }) => ({ url: `${API_PATHS.order(id)}/cancel`, method: 'PATCH', data: { reason } }),
+      invalidatesTags: ['Orders', 'MerchantOrders', 'Delivery'],
+    }),
     createOrder: builder.mutation<
       Order,
-      { cartId: number; addressId: number; paymentMethod: string; customerNote?: string }
+      CheckoutInput & { requestKey?: string }
     >({
-      query: (data) => ({ url: API_PATHS.orders, method: 'POST', data }),
+      query: ({ requestKey, ...data }) => ({ url: API_PATHS.orders, method: 'POST', data, headers: requestKey ? { 'Idempotency-Key': requestKey } : undefined }),
       transformResponse: normalizeOrder,
       invalidatesTags: ['Orders', 'Cart'],
     }),
@@ -359,12 +387,12 @@ export const plate40Api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['DeliveryProfile', 'Delivery'],
     }),
-    deliveryAction: builder.mutation<unknown, { deliveryId: number; action: string; otp?: string }>(
+    deliveryAction: builder.mutation<unknown, { deliveryId: number; action: string; otp?: string; cashCollected?: boolean }>(
       {
-        query: ({ deliveryId, action, otp }) => ({
+        query: ({ deliveryId, action, otp, cashCollected }) => ({
           url: API_PATHS.delivery.action(deliveryId, action),
           method: 'POST',
-          data: otp ? { otp } : undefined,
+          data: otp ? { otp, cashCollected } : undefined,
         }),
         invalidatesTags: ['Delivery', 'DeliveryEarnings', 'Orders', 'MerchantOrders'],
       },
@@ -390,34 +418,59 @@ export const plate40Api = baseApi.injectEndpoints({
       invalidatesTags: ['AdminDelivery'],
     }),
     createReview: builder.mutation<Review, CreateReviewDto>({
-      query: (data) => ({ url: 'http://localhost:3001/api/mock/reviews', method: 'POST', data }),
-      async onQueryStarted({ restaurantId, rating }, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          plate40Api.util.updateQueryData('restaurants', undefined, (draft) => {
-            const restaurant = draft.items.find((r) => r.id === restaurantId);
-            if (restaurant) {
-              const currentRating = Number(restaurant.averageRating) || 0;
-              restaurant.averageRating = currentRating === 0 ? rating.toFixed(1) : ((currentRating + rating) / 2).toFixed(1);
-            }
-          })
-        );
-
-        try {
-          await queryFulfilled;
-          dispatch(plate40Api.util.invalidateTags(['MerchantOrders']));
-        } catch {
-          patchResult.undo();
-        }
-      },
+      query: ({ restaurantId: _restaurantId, ...data }) => ({ url: API_PATHS.reviews, method: 'POST', data }),
+      invalidatesTags: ['Reviews', 'Restaurants', 'Orders'],
+    }),
+    orderTracking: builder.query<OrderTracking, number | string>({
+      query: (id) => ({ url: API_PATHS.tracking(id) }),
+      keepUnusedDataFor: 0,
+    }),
+    publishDeliveryLocation: builder.mutation<{ accepted: boolean }, { id: number; position: DeliveryPosition }>({
+      query: ({ id, position }) => ({ url: API_PATHS.deliveryLocation(id), method: 'POST', data: position }),
+    }),
+    adminOrder: builder.query<Order, number | string>({
+      query: id => ({ url: `${API_PATHS.admin.orders}/${id}` }),
+      providesTags: ['AdminOrders'],
+    }),
+    merchantOrder: builder.query<Order, number | string>({
+      query: id => ({ url: `${API_PATHS.merchant.orders}/${id}` }),
+      providesTags: ['MerchantOrders'],
+    }),
+    quoteOrder: builder.query<OrderQuote, CheckoutInput>({
+      query: data => ({ url: API_PATHS.orderQuote, method: 'POST', data }),
+      providesTags: ['Offers', 'Cart', 'Menu', 'Restaurants', 'Addresses'], keepUnusedDataFor: 0,
+    }),
+    restaurantOffers: builder.query<MerchantOffer[], number | string>({
+      query: id => ({ url: API_PATHS.restaurantOffers(id) }), providesTags: ['Offers'],
+    }),
+    merchantOffers: builder.query<MerchantOffer[], void>({
+      query: () => ({ url: API_PATHS.merchant.offers }), providesTags: ['Offers'],
+    }),
+    createMerchantOffer: builder.mutation<MerchantOffer, OfferInput>({
+      query: data => ({ url: API_PATHS.merchant.offers, method: 'POST', data }), invalidatesTags: ['Offers'],
+    }),
+    updateMerchantOffer: builder.mutation<MerchantOffer, { id: number; data: Partial<OfferInput> & { expectedVersion: number } }>({
+      query: ({ id, data }) => ({ url: `${API_PATHS.merchant.offers}/${id}`, method: 'PATCH', data }), invalidatesTags: ['Offers'],
     }),
     merchantReviews: builder.query<Review[], void>({
-      query: () => ({ url: 'http://localhost:3001/api/mock/reviews' }),
-      providesTags: ['MerchantOrders'],
+      query: () => ({ url: API_PATHS.merchant.reviews }),
+      providesTags: ['Reviews'],
     }),
   }),
 });
 
 export const {
+  useQuoteOrderQuery,
+  useRestaurantOffersQuery,
+  useMerchantOffersQuery,
+  useCreateMerchantOfferMutation,
+  useUpdateMerchantOfferMutation,
+  useOrderTrackingQuery,
+  usePublishDeliveryLocationMutation,
+  useMerchantOrderQuery,
+  useAdminOrderQuery,
+  useSearchRestaurantsQuery,
+  useUpdateAvailabilityMutation,
   useLoginMutation,
   useRegisterMutation,
   useRegisterDeliveryPartnerMutation,
@@ -434,6 +487,7 @@ export const {
   useOrdersQuery,
   useOrderQuery,
   useCreateOrderMutation,
+  useCancelOrderMutation,
   useAddressesQuery,
   useCreateAddressMutation,
   useUpdateAddressMutation,

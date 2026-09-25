@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { Clock3, MapPin, Star } from 'lucide-react';
-import { Badge, Card } from '@plate40/ui';
+import { Card } from '@plate40/ui';
 import { RestaurantOpeningStatus, type Restaurant } from '@plate40/types';
 
 export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
-  const open = restaurant.openingStatus === RestaurantOpeningStatus.OPEN;
+  const open = restaurant.isAcceptingOrders ?? restaurant.openingStatus === RestaurantOpeningStatus.OPEN;
   return (
     <Link href={`/restaurants/${restaurant.id}`} className="group block h-full">
       <Card className="h-full flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)] border-slate-100/80 bg-white">
@@ -37,13 +37,14 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
             </span>
             <span className="flex items-center gap-1.5 opacity-80">
               <Clock3 size={14} className="text-slate-400" /> 
-              20-25 min
+              {restaurant.distanceKm != null ? `${restaurant.distanceKm.toFixed(1)} km` : open ? 'Open now' : 'Closed'}
             </span>
             <span className="flex items-center gap-1.5 opacity-80 truncate max-w-[90px]">
               <MapPin size={14} className="text-slate-400 shrink-0" /> 
               <span className="truncate">{restaurant.city}</span>
             </span>
           </div>
+          {(restaurant.closesAt || restaurant.nextOpensAt) && <p className="p40-muted mb-0">{open ? 'Closes' : 'Opens'} {new Date((open ? restaurant.closesAt : restaurant.nextOpensAt)!).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</p>}
         </div>
       </Card>
     </Link>

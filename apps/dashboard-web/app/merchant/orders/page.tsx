@@ -1,6 +1,7 @@
 'use client';
 
 import { Clock3, CookingPot, PackageCheck } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { ACTIONS } from '@plate40/config';
 import { useMerchantOrdersQuery, useUpdateMerchantOrderMutation } from '@plate40/state';
@@ -58,8 +59,9 @@ function KitchenOrderCard({
           </div>
         </div>
         <ul className="list-none p-0 grid gap-2">
-          <li className="p-3 rounded-lg bg-indigo-50 font-bold">Canonical order details are available from the order API.</li>
+          {order.items?.map(item => <li key={item.id} className="flex justify-between gap-3"><span>{item.quantity} × {item.itemName}</span><Price value={item.totalPrice} /></li>)}
         </ul>
+        <Link className="p40-button p40-button--secondary" href={`/merchant/orders/${order.id}`}>View order & delivery map</Link>
       </div>
       {next ? (
         <div className="flex gap-2.5 px-4 pb-4">

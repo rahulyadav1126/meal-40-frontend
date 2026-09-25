@@ -94,6 +94,7 @@ export enum SortOrder {
 }
 
 export interface PaginationMeta {
+  truncated?: boolean;
   page: number;
   limit: number;
   total: number;
@@ -133,6 +134,21 @@ export interface AuthSession {
 }
 
 export interface Restaurant {
+  phone?: string;
+  email?: string | null;
+  addressLine2?: string | null;
+  postalCode?: string;
+  latitude?: string;
+  longitude?: string;
+  availabilitySettings?: AvailabilitySettings | null;
+  availabilityVersion?: number;
+  isAcceptingOrders?: boolean;
+  effectiveStatus?: string;
+  statusReason?: string;
+  closesAt?: string | null;
+  nextOpensAt?: string | null;
+  distanceKm?: number | null;
+  matchingDishes?: MenuItem[];
   id: number;
   name: string;
   slug: string;
@@ -152,6 +168,14 @@ export interface Restaurant {
 }
 
 export interface MenuItem {
+  discountStartsAt?: string | null;
+  discountEndsAt?: string | null;
+  effectivePrice?: string;
+  hasActiveDiscount?: boolean;
+  soldOutUntil?: string | null;
+  serviceHours?: ServiceInterval[] | null;
+  isOrderable?: boolean;
+  availabilityReason?: string;
   id: number;
   restaurantId: number;
   categoryId: number;
@@ -208,7 +232,12 @@ export interface Address {
   isDefault: boolean;
 }
 
+export type { TrackingPoint, DeliveryPosition, OrderTracking } from './tracking';
+export type { MerchantOffer, OfferInput, OrderQuote, CheckoutInput } from './offers';
 export interface Order {
+  customerNote?: string | null;
+  items?: Array<{ id: number; itemName: string; quantity: number; unitPrice: string; totalPrice: string }>;
+  addressSnapshot?: { addressLine1: string; addressLine2?: string | null; city: string; state: string; postalCode: string; latitude: string; longitude: string } | null;
   id: number;
   orderNumber: string;
   restaurantId: number;
@@ -307,4 +336,14 @@ export interface CreateReviewDto {
   restaurantId: number;
   rating: number;
   comment?: string;
+}
+
+export interface ServiceInterval { day: number; opens: string; closes: string }
+export interface AvailabilitySettings {
+  timezone: string;
+  availabilityMode: 'SCHEDULED' | 'FORCED_OPEN' | 'FORCED_CLOSED';
+  overrideExpiresAt?: string | null;
+  overrideReason?: string | null;
+  weeklyHours: ServiceInterval[];
+  exceptions: Array<{ date: string; intervals: Array<{ opens: string; closes: string }> }>;
 }

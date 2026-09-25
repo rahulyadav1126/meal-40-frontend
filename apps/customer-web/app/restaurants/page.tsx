@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { FoodType } from '@plate40/types';
-import { useRestaurantsQuery } from '@plate40/state';
+import { useSearchRestaurantsQuery } from '@plate40/state';
+import Link from 'next/link';
 import { useDebouncedValue } from '@plate40/hooks';
 import { EmptyState, ErrorState, PageHeader, SearchInput, Skeleton } from '@plate40/ui';
 import { RestaurantCard } from '../../components/restaurant-card';
@@ -70,17 +71,18 @@ export default function RestaurantsPage() {
   const [search, setSearch] = useState('');
   const [foodType, setFoodType] = useState<FoodType | ''>('');
   const debouncedSearch = useDebouncedValue(search);
-  const { data, isLoading, isError } = useRestaurantsQuery({ page: 1, limit: 24, search: debouncedSearch || undefined, foodType: foodType || undefined });
+  const { data, isLoading, isError } = useSearchRestaurantsQuery({ page: 1, limit: 24, q: debouncedSearch || undefined, foodType: foodType || undefined }, { pollingInterval: 60000 });
 
   return (
     <main className="p40-container py-8 pb-16 min-h-[70vh]">
       <PageHeader title="Restaurants near you" description="Verified hyperlocal kitchens serving everyday meals." />
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="flex-1">
-          <SearchInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search restaurants" />
+          <SearchInput value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search restaurants or dishes" />
         </div>
         <FoodTypeDropdown value={foodType} onChange={(v) => setFoodType(v as FoodType | '')} />
       </div>
+      <Link href="/search" className="p40-button p40-button--secondary mb-6">Search dishes with location and availability filters</Link>
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} />)}

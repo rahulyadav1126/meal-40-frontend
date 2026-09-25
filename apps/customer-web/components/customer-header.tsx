@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ROUTES, STORAGE_KEYS } from '@plate40/config';
 import { clearSession, SESSION_CHANGED_EVENT } from '@plate40/auth';
+import { revokeCurrentSession } from '@plate40/api-client';
 import { baseApi, setSelectedLocation, useAppDispatch, useAppSelector, useCartsQuery, useCartItemsQuery, useAddressesQuery } from '@plate40/state';
 import { UserRole, AddressLabel, type User } from '@plate40/types';
 import { AddressAutocomplete, Button, type AddressSelection } from '@plate40/ui';
@@ -150,6 +151,7 @@ export function CustomerHeader() {
 
   const saveLocation = (value: StoredLocation) => {
     window.localStorage.setItem(STORAGE_KEYS.deliveryLocation, JSON.stringify(value));
+    window.dispatchEvent(new Event('plate40:location-changed'));
     dispatch(setSelectedLocation(JSON.stringify({ label: value.label, tag: value.tag })));
     setManualLocation('');
     setSelectedAddress(null);
@@ -210,7 +212,8 @@ export function CustomerHeader() {
     });
   };
 
-  const signOut = () => {
+  const signOut = async () => {
+    try { await revokeCurrentSession(); } catch { window.alert('Signed out on this device. Server revocation could not be confirmed; revoke this session when connected.'); }
     clearSession();
     dispatch(baseApi.util.resetApiState());
     router.replace(ROUTES.customer.home);
@@ -386,7 +389,7 @@ export function CustomerHeader() {
             <UtensilsCrossed className="text-[#06402b] transition-colors duration-200 group-hover:text-[#fc8019]" size={18} />
             <span>Restaurants</span>
           </Link>
-          <Link href={ROUTES.customer.restaurants} className="flex items-center gap-[0.6rem] text-[#06402b] font-semibold text-base transition-colors duration-200 hover:text-[#fc8019] group">
+          <Link href={ROUTES.customer.search} className="flex items-center gap-[0.6rem] text-[#06402b] font-semibold text-base transition-colors duration-200 hover:text-[#fc8019] group">
             <Search className="text-[#06402b] transition-colors duration-200 group-hover:text-[#fc8019]" size={18} />
             <span>Search</span>
           </Link>
@@ -510,6 +513,7 @@ export function CustomerHeader() {
                 <Link href={ROUTES.customer.restaurants} className="flex items-center gap-3 text-slate-700 font-medium p-2 hover:bg-slate-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                   <UtensilsCrossed size={20} className="text-slate-400" /> Restaurants
                 </Link>
+                <Link href={ROUTES.customer.search} className="flex items-center gap-3 text-slate-700 font-medium p-2 hover:bg-slate-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}><Search size={20} /> Search dishes & restaurants</Link>
                 <Link href={ROUTES.customer.offers} className="flex items-center gap-3 text-slate-700 font-medium p-2 hover:bg-slate-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>
                   <Percent size={20} className="text-slate-400" /> Offers
                   <span className="ml-auto bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full font-bold">NEW</span>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useOrdersQuery } from '@plate40/state';
-import { OrderStatus, PaymentStatus, PaymentMethod } from '@plate40/types';
+import { OrderStatus } from '@plate40/types';
 import {
   EmptyState,
   ErrorState,
@@ -30,15 +30,7 @@ export default function OrdersPage() {
       ) : data.length ? (
         <div className="grid gap-3.5">
           {data.map((order) => {
-            let displayPaymentStatus = order.paymentStatus;
-            if (order.paymentStatus === PaymentStatus.PENDING) {
-              const isAcceptedOrBeyond = order.orderStatus !== OrderStatus.PENDING && order.orderStatus !== OrderStatus.REJECTED && order.orderStatus !== OrderStatus.CANCELLED;
-              if (order.paymentMethod === PaymentMethod.ONLINE && isAcceptedOrBeyond) {
-                displayPaymentStatus = PaymentStatus.PAID;
-              } else if (order.orderStatus === OrderStatus.DELIVERED) {
-                displayPaymentStatus = PaymentStatus.PAID;
-              }
-            }
+            const displayPaymentStatus = order.paymentStatus;
 
             return (
             <Link href={`/orders/${order.id}`} key={order.id} className="no-underline text-inherit block">
