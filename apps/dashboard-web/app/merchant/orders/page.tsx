@@ -21,7 +21,7 @@ import {
 const NEXT_ACTION: Partial<Record<OrderStatus, { action: string; label: string }>> = {
   [OrderStatus.PENDING]: { action: ACTIONS.accept, label: 'Accept & send to kitchen' },
   [OrderStatus.ACCEPTED]: { action: ACTIONS.preparing, label: 'Mark preparing' },
-  [OrderStatus.PREPARING]: { action: ACTIONS.ready, label: 'Mark ready' },
+  [OrderStatus.PREPARING]: { action: ACTIONS.ready, label: 'Ready — request rider' },
 };
 
 function KitchenOrderCard({
@@ -63,6 +63,7 @@ function KitchenOrderCard({
         </ul>
         <Link className="p40-button p40-button--secondary" href={`/merchant/orders/${order.id}`}>View order & delivery map</Link>
       </div>
+      {[OrderStatus.READY, OrderStatus.ASSIGNED, OrderStatus.PICKED_UP, OrderStatus.OUT_FOR_DELIVERY].includes(order.orderStatus) && <p className="mx-4 mb-4 rounded-xl bg-green-50 p-3 text-sm text-green-900">{order.orderStatus === OrderStatus.READY ? 'Ready for pickup. Available riders can now accept this delivery.' : order.orderStatus === OrderStatus.ASSIGNED ? 'Rider assigned. Keep the package ready; pickup is confirmed by the rider.' : 'Handed to the rider. Delivery progress is managed by the assigned rider.'}</p>}
       {next ? (
         <div className="flex gap-2.5 px-4 pb-4">
           {order.orderStatus === OrderStatus.PENDING ? (
@@ -104,9 +105,9 @@ export default function MerchantOrdersPage() {
   async function action(order: Order, actionName: string) {
     try {
       await update({ orderId: order.id, action: actionName }).unwrap();
-      toast.success('Order status updated');
-    } catch {
-      toast.error('Unable to update this order.');
+      toast.success(actionName === ACTIONS.ready ? 'Order ready. Delivery request created for available riders.' : 'Order status updated');
+    } catch (error) {
+      toast.error((error as { data?: { message?: string } })?.data?.message ?? 'Unable to update this order.');
     }
   }
   const active = data.filter(

@@ -9,8 +9,8 @@ import {
   useUpdateMerchantMenuItemMutation,
   useUploadMenuImageMutation,
 } from '@plate40/state';
-import { FoodType, type Category, type MenuItem, type Restaurant } from '@plate40/types';
-import { Button, Input } from '@plate40/ui';
+import { FoodType, type Cuisine, type Category, type MenuItem, type Restaurant } from '@plate40/types';
+import { Button, CuisinePicker, Input } from '@plate40/ui';
 
 interface Props {
   categories: Category[];
@@ -35,14 +35,15 @@ const INITIAL_FORM = {
 
 function messageFrom(error: unknown): string {
   if (typeof error === 'object' && error && 'data' in error) {
-    const data = (error as { data?: { message?: string } }).data;
-    if (data?.message) return data.message;
+    const data = (error as { data?: { message?: string | string[] } }).data;
+    if (data?.message) return Array.isArray(data.message) ? data.message.join('. ') : data.message;
   }
   return 'Unable to save this item. Please try again.';
 }
 
 export function AddMenuItemDialog({ categories, restaurants, item, open, onClose }: Props) {
   const titleId = useId();
+  const [cuisines, setCuisines] = useState<Cuisine[]>(item?.cuisines ?? []);
   const [form, setForm] = useState(() => ({
     ...INITIAL_FORM,
     name: item?.name ?? '',
@@ -64,6 +65,10 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
   const [createItem, createState] = useCreateMerchantMenuItemMutation();
   const [updateItem, updateState] = useUpdateMerchantMenuItemMutation();
   const isSaving = uploadState.isLoading || createState.isLoading || updateState.isLoading;
+
+  useEffect(() => {
+    if (!form.restaurantId && restaurants[0]) setForm(current => ({ ...current, restaurantId: String(restaurants[0]!.id) }));
+  }, [form.restaurantId, restaurants]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,8 +110,17 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
     event.preventDefault();
     const price = Number(form.price);
     const discount = form.discountedPrice ? Number(form.discountedPrice) : null;
-    if (!form.restaurantId || !form.categoryId) {
-      setError('A restaurant and category are required.');
+    const preparationTime = Number(form.preparationTimeMinutes);
+    if (!Number.isInteger(preparationTime) || preparationTime < 1 || preparationTime > 1440) {
+      setError('Preparation time must be between 1 and 1440 whole minutes.');
+      return;
+    }
+    if (form.discountStartsAt && form.discountEndsAt && new Date(form.discountStartsAt) >= new Date(form.discountEndsAt)) {
+      setError('Sale end must be after its start.');
+      return;
+    }
+    if (!form.restaurantId) {
+      setError('A restaurant is required.');
       return;
     }
     if (form.name.trim().length < 2) {
@@ -125,7 +139,8 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
       const uploaded = image ? await uploadImage(image).unwrap() : null;
       const payload = {
         restaurantId: Number(form.restaurantId),
-        categoryId: Number(form.categoryId),
+        categoryId: form.categoryId ? Number(form.categoryId) : null,
+        cuisines,
         name: form.name.trim(),
         description: form.description.trim() || undefined,
         imageUrl: uploaded?.url,
@@ -182,7 +197,7 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
             <X size={20} />
           </button>
         </header>
-        {!restaurants.length || !categories.length ? (
+        {!restaurants.length ? (
           <div className="menu-prerequisite">
             <span className="menu-prerequisite__icon">
               {!restaurants.length ? <Store size={28} /> : <Tags size={28} />}
@@ -215,6 +230,7 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
           <form onSubmit={submit} className="flex flex-col gap-6">
             <div className="flex flex-col md:flex-row gap-6">
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+              <CuisinePicker value={cuisines} onChange={setCuisines} disabled={isSaving} />
               {restaurants.length > 1 ? (
                 <label className="grid gap-1">
                   <span className="font-semibold text-sm text-[#06402b]">Restaurant</span>
@@ -249,10 +265,9 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
                   className="h-11 px-3 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:border-[#fc8019] focus:ring-1 focus:ring-[#fc8019] transition-all text-[#06402b] w-full"
                   value={form.categoryId}
                   onChange={(event) => update('categoryId', event.target.value)}
-                  required
                 >
-                  <option value="" disabled>
-                    Select a category
+                  <option value="">
+                    General (default)
                   </option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -410,7 +425,7 @@ export function AddMenuItemDialog({ categories, restaurants, item, open, onClose
               <Button
                 type="submit"
                 className="w-full sm:w-auto"
-                disabled={isSaving || !categories.length || !restaurants.length}
+                disabled={isSaving || !restaurants.length}
               >
                 {isSaving ? (
                   <>

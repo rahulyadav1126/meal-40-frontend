@@ -31,6 +31,7 @@ export default function MerchantMenuPage() {
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('all');
+  const [restaurantId, setRestaurantId] = useState('all');
   const menuQuery = useMerchantMenuQuery();
   const categoryQuery = useCategoriesQuery();
   const restaurantQuery = useMerchantRestaurantsQuery();
@@ -44,11 +45,11 @@ export default function MerchantMenuPage() {
   const data = useMemo(
     () =>
       (menuQuery.data ?? []).filter((item) => {
-        const matchesSearch = item.name.toLowerCase().includes(search.trim().toLowerCase());
+        const matchesSearch = `${item.name} ${item.description ?? ''} ${(item.cuisines ?? []).join(' ')}`.toLowerCase().includes(search.trim().toLowerCase());
         const matchesCategory = categoryId === 'all' || item.categoryId === Number(categoryId);
-        return matchesSearch && matchesCategory;
+        return matchesSearch && matchesCategory && (restaurantId === 'all' || Number(item.restaurantId) === Number(restaurantId));
       }),
-    [categoryId, menuQuery.data, search],
+    [categoryId, restaurantId, menuQuery.data, search],
   );
   const columns = useMemo<Array<ColumnDef<MenuItem>>>(
     () => [
@@ -198,7 +199,8 @@ export default function MerchantMenuPage() {
               onChange={(event) => setSearch(event.target.value)}
             />
           </label>
-          <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+          <select aria-label="Filter by outlet" value={restaurantId} onChange={event => setRestaurantId(event.target.value)}><option value="all">All outlets</option>{restaurants.map(restaurant => <option key={restaurant.id} value={restaurant.id}>{restaurant.name}</option>)}</select>
+          <select aria-label="Filter by category" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
             <option value="all">All categories</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
@@ -216,7 +218,7 @@ export default function MerchantMenuPage() {
             data={data}
             columns={columns}
             emptyMessage={
-              search || categoryId !== 'all'
+              search || categoryId !== 'all' || restaurantId !== 'all'
                 ? 'No items match these filters.'
                 : 'Your menu is empty. Add your first item to get started.'
             }
@@ -225,6 +227,7 @@ export default function MerchantMenuPage() {
       </Card>
       {showAddItem || editingItem ? (
         <AddMenuItemDialog
+          key={editingItem?.id ?? 'new-menu-item'}
           open
           item={editingItem}
           onClose={() => {

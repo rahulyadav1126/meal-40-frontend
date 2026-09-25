@@ -26,6 +26,7 @@ export function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
         </div>
         <div className="p-5 flex flex-col flex-1">
           <h3 className="m-0 text-lg font-bold text-slate-800 leading-tight group-hover:text-[#fc8019] transition-colors">{restaurant.name}</h3>
+          {!!restaurant.cuisines?.length && <p className="text-xs font-medium text-green-800 mt-2 mb-0">{restaurant.cuisines.join(' · ')}</p>}
           <p className="text-slate-500 text-[0.85rem] mt-2 mb-4 flex-1 line-clamp-2 leading-relaxed">
             {restaurant.description || 'Wholesome neighborhood meals prepared fresh everyday.'}
           </p>

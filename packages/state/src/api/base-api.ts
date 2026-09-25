@@ -31,6 +31,8 @@ const axiosBaseQuery: BaseQueryFn<ApiQueryArgs, unknown, QueryError> = async ({
 };
 
 export const TAG_TYPES = [
+  'Categories',
+  'Tracking',
   'Offers',
   'Restaurants',
   'Menu',

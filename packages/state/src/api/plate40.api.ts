@@ -61,12 +61,13 @@ export interface DeliveryRegistration extends Registration {
   documentUrl?: string;
 }
 export interface CreateMenuItemInput {
+  cuisines?: import('@plate40/types').Cuisine[];
   discountStartsAt?: string | null;
   discountEndsAt?: string | null;
   soldOutUntil?: string | null;
   serviceHours?: ServiceInterval[] | null;
   restaurantId: number;
-  categoryId: number;
+  categoryId?: number | null;
   name: string;
   description?: string;
   imageUrl?: string;
@@ -83,6 +84,7 @@ export interface UploadedImage {
   format: string;
 }
 export interface CreateRestaurantInput {
+  cuisines?: import('@plate40/types').Cuisine[];
   name: string;
   description?: string;
   phone: string;
@@ -277,7 +279,7 @@ export const plate40Api = baseApi.injectEndpoints({
       },
       invalidatesTags: ['Restaurants'],
     }),
-    categories: builder.query<Category[], void>({ query: () => ({ url: API_PATHS.categories }) }),
+    categories: builder.query<Category[], void>({ query: () => ({ url: API_PATHS.categories }), transformResponse: (items: Category[]) => items.map(item => ({ ...item, id: Number(item.id) })), providesTags: ['Categories'] }),
     updateMerchantOrder: builder.mutation<
       Order,
       { orderId: number; action: string; note?: string }
@@ -287,7 +289,7 @@ export const plate40Api = baseApi.injectEndpoints({
         method: 'PATCH',
         data: { note },
       }),
-      invalidatesTags: ['MerchantOrders', 'Orders'],
+      invalidatesTags: ['MerchantOrders', 'Orders', 'Delivery', 'Tracking', 'AdminOrders', 'AdminDelivery'],
     }),
     merchantMenu: builder.query<MenuItem[], void>({
       query: () => ({ url: API_PATHS.merchant.menu }),
@@ -304,7 +306,7 @@ export const plate40Api = baseApi.injectEndpoints({
     createMerchantMenuItem: builder.mutation<MenuItem, CreateMenuItemInput>({
       query: (data) => ({ url: API_PATHS.merchant.menu, method: 'POST', data }),
       transformResponse: normalizeMenuItem,
-      invalidatesTags: ['Menu'],
+      invalidatesTags: ['Menu', 'Categories', 'Restaurants'],
     }),
     updateMerchantMenuItem: builder.mutation<
       MenuItem,
@@ -316,7 +318,7 @@ export const plate40Api = baseApi.injectEndpoints({
         data,
       }),
       transformResponse: normalizeMenuItem,
-      invalidatesTags: ['Menu'],
+      invalidatesTags: ['Menu', 'Categories', 'Cart', 'Restaurants'],
     }),
     deleteMerchantMenuItem: builder.mutation<void, number>({
       query: (itemId) => ({
@@ -394,7 +396,7 @@ export const plate40Api = baseApi.injectEndpoints({
           method: 'POST',
           data: otp ? { otp, cashCollected } : undefined,
         }),
-        invalidatesTags: ['Delivery', 'DeliveryEarnings', 'Orders', 'MerchantOrders'],
+        invalidatesTags: ['Delivery', 'DeliveryEarnings', 'Orders', 'MerchantOrders', 'Tracking', 'AdminOrders', 'AdminDelivery'],
       },
     ),
     adminDeliveryPartners: builder.query<DeliveryPartner[], void>({
@@ -423,6 +425,7 @@ export const plate40Api = baseApi.injectEndpoints({
     }),
     orderTracking: builder.query<OrderTracking, number | string>({
       query: (id) => ({ url: API_PATHS.tracking(id) }),
+      providesTags: ['Tracking'],
       keepUnusedDataFor: 0,
     }),
     publishDeliveryLocation: builder.mutation<{ accepted: boolean }, { id: number; position: DeliveryPosition }>({

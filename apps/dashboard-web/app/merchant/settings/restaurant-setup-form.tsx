@@ -4,8 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { Crosshair, LoaderCircle, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateMerchantRestaurantMutation, useUpdateMerchantRestaurantMutation } from '@plate40/state';
-import { AddressAutocomplete, Button, Card, Input } from '@plate40/ui';
-import type { Restaurant } from '@plate40/types';
+import { AddressAutocomplete, Button, Card, CuisinePicker, Input } from '@plate40/ui';
+import type { Cuisine, Restaurant } from '@plate40/types';
 
 const INITIAL = {
   name: '',
@@ -30,6 +30,7 @@ function apiMessage(error: unknown) {
 }
 
 export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Restaurant, onCancel?: () => void }) {
+  const [cuisines, setCuisines] = useState<Cuisine[]>(restaurant?.cuisines ?? []);
   const [draft, setDraft] = useState(
     restaurant
       ? {
@@ -84,6 +85,7 @@ export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Res
     try {
       const payload = {
         ...draft,
+        cuisines,
         description: draft.description.trim() || undefined,
         email: draft.email?.trim() || undefined,
         addressLine2: draft.addressLine2?.trim() || undefined,
@@ -122,6 +124,7 @@ export function RestaurantSetupForm({ restaurant, onCancel }: { restaurant?: Res
         </div>
       </div>
       <form className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start" onSubmit={submit}>
+        <CuisinePicker value={cuisines} onChange={setCuisines} disabled={isLoading} />
         <label className="grid gap-1">
           <span className="font-semibold text-sm text-[#06402b]">Restaurant name</span>
           <Input

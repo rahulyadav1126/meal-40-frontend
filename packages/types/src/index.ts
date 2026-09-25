@@ -1,3 +1,5 @@
+export * from './cuisines';
+
 export enum UserRole {
   CUSTOMER = 'CUSTOMER',
   MERCHANT = 'MERCHANT',
@@ -134,6 +136,7 @@ export interface AuthSession {
 }
 
 export interface Restaurant {
+  cuisines?: import('./cuisines').Cuisine[] | null;
   phone?: string;
   email?: string | null;
   addressLine2?: string | null;
@@ -168,6 +171,7 @@ export interface Restaurant {
 }
 
 export interface MenuItem {
+  cuisines?: import('./cuisines').Cuisine[] | null;
   discountStartsAt?: string | null;
   discountEndsAt?: string | null;
   effectivePrice?: string;

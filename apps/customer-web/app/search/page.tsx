@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, MapPin } from 'lucide-react';
 import { useSearchRestaurantsQuery } from '@plate40/state';
 import { useDebouncedValue } from '@plate40/hooks';
 import { STORAGE_KEYS } from '@plate40/config';
+import { Cuisine } from '@plate40/types';
 import { Button, EmptyState, ErrorState, Price, Skeleton } from '@plate40/ui';
 import { RestaurantCard } from '../../components/restaurant-card';
 
@@ -42,14 +43,15 @@ export default function SearchPage() {
     <section className="rounded-3xl bg-white border border-slate-200 p-6 sm:p-10 mb-7">
       <span className="p40-eyebrow">FIND YOUR NEXT FAVOURITE</span>
       <h1 className="text-3xl sm:text-4xl text-[var(--p40-heading)] mt-3 mb-3">Good food, closer to you.</h1>
-      <p className="text-slate-500 mb-6">Search a dish, a kitchen, or a neighbourhood.</p>
+      <p className="text-slate-500 mb-6">Search dishes, restaurants, cuisines or neighbourhoods.</p>
       <form className="flex gap-3" role="search" onSubmit={e => { e.preventDefault(); remember(); }}>
-        <label className="flex-1 relative"><span className="sr-only">Search restaurants and dishes</span><Search size={20} className="absolute left-4 top-4 text-slate-400" /><input type="search" maxLength={100} className="p40-input pl-12 rounded-xl" placeholder="Try biryani, paneer, or a restaurant name" value={search} onChange={e => setSearch(e.target.value)} /></label>
+        <label className="flex-1 relative"><span className="sr-only">Search restaurants, dishes and cuisines</span><Search size={20} className="absolute left-4 top-4 text-slate-400" /><input type="search" maxLength={100} className="p40-input pl-12 rounded-xl" placeholder="Try dosa, South Indian, or a restaurant name" value={search} onChange={e => setSearch(e.target.value)} /></label>
         <Button type="submit">Search</Button>
       </form>
       <p className="p40-muted flex items-center gap-2 mt-4"><MapPin size={16} />{location ? `Delivering near ${location.label ?? 'your selected location'}` : 'Choose your delivery location in the header to see serviceable restaurants.'}</p>
       {!search && recent.length > 0 && <div className="flex flex-wrap gap-2 mt-4" aria-label="Recent searches">{recent.map(term => <button className="p40-button p40-button--secondary" key={term} onClick={() => setSearch(term)}>{term}</button>)}<button className="p40-button p40-button--secondary" onClick={() => { setRecent([]); try { localStorage.removeItem('plate40.recent-searches'); } catch { /* Optional. */ } }}>Clear history</button></div>}
     </section>
+    <div className="flex gap-2 overflow-x-auto pb-3 mb-4" aria-label="Browse cuisines">{Object.values(Cuisine).map(cuisine => <button type="button" key={cuisine} aria-pressed={search === cuisine} onClick={() => setSearch(search === cuisine ? '' : cuisine)} className={`shrink-0 rounded-full border px-4 py-2 text-sm ${search === cuisine ? 'bg-green-800 text-white border-green-800' : 'bg-white border-slate-200 text-slate-700'}`}>{cuisine}</button>)}</div>
     <div className="flex flex-wrap items-center gap-3 mb-6">
       <SlidersHorizontal size={18} aria-hidden />
       <label className="sr-only" htmlFor="search-food">Food preference</label><select id="search-food" className="p40-input max-w-48" value={foodType} onChange={e => setFoodType(e.target.value)}><option value="">All food types</option><option value="VEG">Vegetarian</option><option value="NON_VEG">Non vegetarian</option><option value="EGG">Egg</option></select>

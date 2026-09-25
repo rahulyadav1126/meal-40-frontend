@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Bike, MapPin, PackageCheck, Wallet } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { toast } from 'sonner';
 import { API_URLS, STORAGE_KEYS } from '@plate40/config';
@@ -50,6 +52,8 @@ function DeliveryCard({
   const [cashCollected, setCashCollected] = useState(false);
   const [act, actionState] = useDeliveryActionMutation();
   const next = NEXT[delivery.status];
+  const steps = [DeliveryStatus.ASSIGNED, DeliveryStatus.ARRIVED_AT_MERCHANT, DeliveryStatus.PICKED_UP, DeliveryStatus.OUT_FOR_DELIVERY, DeliveryStatus.ARRIVED_AT_CUSTOMER, DeliveryStatus.DELIVERED];
+  const step = steps.indexOf(delivery.status);
   const tracking = useOrderTrackingQuery(delivery.orderId, { pollingInterval: 10000, skip: available || [DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED].includes(delivery.status) });
   async function run(action: string) {
     try {
@@ -67,14 +71,15 @@ function DeliveryCard({
     }
   }
   return (
-    <Card className="p-4 sm:p-5 flex flex-col gap-3 bg-white shadow-sm rounded-xl border border-slate-100">
+    <Card className="p-4 sm:p-6 flex flex-col gap-3 bg-white shadow-sm rounded-2xl border border-slate-200">
       <div className="flex justify-between items-center pb-3 border-b border-slate-100">
-        <strong className="text-lg">#{delivery.order?.orderNumber}</strong>
+        <strong className="text-lg flex items-center gap-2 text-green-900"><Bike size={22} />#{delivery.order?.orderNumber ?? delivery.orderId}</strong>
         <Badge tone={delivery.status === DeliveryStatus.DELIVERED ? 'success' : 'indigo'}>
           {humanize(delivery.status)}
         </Badge>
       </div>
-      <h3>{delivery.order?.restaurant?.name ?? 'Restaurant'}</h3>
+      {!available && step >= 0 && <ol aria-label="Delivery progress" className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-0 list-none my-2">{['Assigned', 'At store', 'Picked up', 'On the way', 'At customer', 'Delivered'].map((label, index) => <li key={label} aria-current={step === index ? 'step' : undefined} className={`rounded-lg px-2 py-2 text-xs text-center ${index <= step ? 'bg-green-100 text-green-900 font-semibold' : 'bg-slate-50 text-slate-400'}`}>{label}</li>)}</ol>}
+      <h3 className="m-0 text-xl text-slate-900">{delivery.order?.restaurant?.name ?? 'Restaurant'}</h3>
       <p>
         <strong>Pickup:</strong>{' '}
         {delivery.order?.restaurant?.addressLine1
@@ -109,7 +114,7 @@ function DeliveryCard({
           ) : null}
         </p>
       ) : null}
-      {delivery.order?.address ? (
+      {delivery.order?.address && [DeliveryStatus.PICKED_UP, DeliveryStatus.OUT_FOR_DELIVERY, DeliveryStatus.ARRIVED_AT_CUSTOMER].includes(delivery.status) ? (
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${delivery.order.address.latitude},${delivery.order.address.longitude}`)}`}
           target="_blank"
@@ -118,8 +123,8 @@ function DeliveryCard({
           Open customer location in Maps
         </a>
       ) : null}
-      {!available && ![DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED].includes(delivery.status) && <DeliveryMap tracking={tracking.currentData} loading={tracking.isLoading} error={tracking.isError} onRetry={() => { void tracking.refetch(); }} />}
-      <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-slate-100">
+      {!available && ![DeliveryStatus.DELIVERED, DeliveryStatus.CANCELLED].includes(delivery.status) && <DeliveryMap riderView tracking={tracking.currentData} loading={tracking.isLoading} error={tracking.isError} onRetry={() => { void tracking.refetch(); }} />}
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 mt-2 pt-4 border-t border-slate-100">
         {available ? (
           <>
             <Button disabled={actionState.isLoading} onClick={() => run('accept')}>
@@ -131,7 +136,7 @@ function DeliveryCard({
           </>
         ) : null}
         {next ? (
-          <Button disabled={actionState.isLoading} onClick={() => run(next.action)}>
+          <Button className="w-full sm:w-auto min-h-12" disabled={actionState.isLoading} onClick={() => run(next.action)}>
             {next.label}
           </Button>
         ) : null}
@@ -190,7 +195,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
     };
     window.addEventListener('plate40:session-changed', reconnect);
     const refresh = () =>
-      dispatch(baseApi.util.invalidateTags(['Delivery', 'DeliveryProfile', 'DeliveryEarnings']));
+      dispatch(baseApi.util.invalidateTags(['Delivery', 'DeliveryProfile', 'DeliveryEarnings', 'Tracking']));
     socket.on('delivery.available', refresh);
     socket.on('delivery.updated', refresh);
     return () => {
@@ -234,7 +239,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
     );
   else if (mode === 'active')
     content = active.data?.length ? (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 max-w-5xl mx-auto">
         {active.data.map((item) => (
           <DeliveryCard key={item.id} delivery={item} />
         ))}
@@ -296,27 +301,29 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
   else
     content = (
       <>
+        <section className="rounded-3xl bg-green-950 text-white p-6 sm:p-8 mb-6 flex flex-wrap items-center justify-between gap-6"><div><span className="text-xs uppercase tracking-widest text-green-200">Your delivery workspace</span><h2 className="text-2xl sm:text-3xl mt-2 mb-3">{active.data?.length ? 'One order. Every step in view.' : partner.isOnline ? 'Ready for your next pickup' : 'Your next delivery starts here'}</h2><p className="text-green-100 text-sm max-w-xl m-0">{active.data?.length ? 'Follow the route, confirm pickup at the store, then head to the customer.' : 'Go online, accept an available order and follow each handoff safely.'}</p></div><Link href={active.data?.length ? '/delivery/active' : '/delivery/available'} className="rounded-xl bg-white text-green-950 px-5 py-3 font-semibold">{active.data?.length ? 'Continue delivery' : 'Find deliveries'} →</Link></section>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Card>
-            <small>Available</small>
+            <small className="flex gap-2 items-center text-slate-500"><MapPin size={17} />Available</small>
             <h2>{available.data?.length ?? 0}</h2>
           </Card>
           <Card>
-            <small>Active</small>
+            <small className="flex gap-2 items-center text-slate-500"><Bike size={17} />Active</small>
             <h2>{active.data?.length ?? 0}</h2>
           </Card>
           <Card>
-            <small>Completed</small>
+            <small className="flex gap-2 items-center text-slate-500"><PackageCheck size={17} />Completed</small>
             <h2>{stats?.completedDeliveries ?? 0}</h2>
           </Card>
           <Card>
-            <small>Today&apos;s earnings</small>
+            <small className="flex gap-2 items-center text-slate-500"><Wallet size={17} />Today&apos;s earnings</small>
             <h2>₹{stats?.today ?? '0.00'}</h2>
           </Card>
         </div>
         {active.data?.map((item) => (
           <DeliveryCard key={item.id} delivery={item} />
         ))}
+        {!active.isFetching && !active.isError && !active.data?.length && <EmptyState title="No active delivery" description="Accept a pickup request to see its route and step-by-step actions here." />}
       </>
     );
   return (
@@ -334,6 +341,7 @@ export function DeliveryWorkspace({ mode }: { mode: Mode }) {
           </Button>
         }
       />
+      {!pending && (active.isError || available.isError || history.isError || earnings.isError) && <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="mt-0 text-sm">Some delivery information could not be loaded. Totals may be unavailable.</p><Button variant="secondary" onClick={() => { void active.refetch(); void available.refetch(); void history.refetch(); void earnings.refetch(); }}>Refresh delivery data</Button></div>}
       {pending ? (
         <Card>
           <h2>Approval pending</h2>

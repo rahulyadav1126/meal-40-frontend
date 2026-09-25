@@ -48,6 +48,7 @@ export default function SettingsPage() {
             <div>
               <span className="text-[#fc8019] text-xs font-extrabold tracking-[0.1em] uppercase mb-2 block">Restaurant Profile</span>
               <h2 className="text-[#06402b] text-3xl font-bold mt-0 mb-3">{restaurant.name}</h2>
+              {!!restaurant.cuisines?.length && <p className="text-sm text-green-800">{restaurant.cuisines.join(' · ')}</p>}
               <p className="text-slate-500 leading-[1.6] m-0">{restaurant.description || 'No restaurant description added.'}</p>
             </div>
             <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
